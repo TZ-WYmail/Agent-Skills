@@ -1,0 +1,30 @@
+# Local course projects and generated class-project artifacts
+teaching/
+*-class/
+.teach-pdf-content/
+sources/
+extracts/
+lessons/
+reviews/
+
+# Source materials and OCR/model payloads
+*.pdf
+*.traineddata
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+
+# Local review drafts
+teach-pdf-content-review*.md
+
+# Python cache/build artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local logs and temporary files
+*.log
+*.tmp
+*.bak
