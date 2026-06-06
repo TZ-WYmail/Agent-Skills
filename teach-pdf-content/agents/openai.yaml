@@ -1,4 +1,4 @@
 interface:
   display_name: "Teach PDF Content"
-  short_description: "Teach supplied PDFs or course readings with source-grounded study files."
-  default_prompt: "Use $teach-pdf-content to teach the specified PDF chapter or course reading, then create source-grounded notes, recall questions, exercises, glossary, and a review plan."
+  short_description: "Turn supplied PDFs or course readings into chapter-managed, source-grounded study packs."
+  default_prompt: "Use $teach-pdf-content to teach the specified PDF chapter or course reading, split long sources into chapter packs, then create source-grounded notes, mastery standards, recall questions, exercises, glossary, memory cards, and a review plan."

@@ -11,8 +11,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-TEMPLATE_VERSION = "2.1"
-CHECKER_VERSION = "1.1"
+TEMPLATE_VERSION = "2.2"
+CHECKER_VERSION = "1.2"
 FULL_FILE_ORDER = [
     "00-learning-path.md",
     "01-lesson-notes.md",
@@ -20,6 +20,7 @@ FULL_FILE_ORDER = [
     "03-exercises.md",
     "04-glossary.md",
     "05-review-plan.md",
+    "06-memory-cards.md",
     "source-map.md",
 ]
 SHORT_FILE_ORDER = [
@@ -28,6 +29,36 @@ SHORT_FILE_ORDER = [
     "02-active-recall.md",
     "source-map.md",
 ]
+
+CHAPTER_INDEX_ZH = """# 章节索引：{source_id}
+
+## 来源
+
+- 文件：{source}
+- 创建时间：{created_at}
+- 说明：长课程或长 PDF 应按章节/模块逐个生成学习包，不要合成一个巨大 Markdown。
+
+## 章节计划
+
+| 章节 ID | 标题 | 范围 | 状态 | 输出目录 | 备注 |
+| --- | --- | --- | --- | --- | --- |
+| {chapter_id} | {title} | {chapter} | scaffolded | chapters/{chapter_id} |  |
+"""
+
+CHAPTER_INDEX_EN = """# Chapter Index: {source_id}
+
+## Source
+
+- File: {source}
+- Created: {created_at}
+- Note: Split long courses or long PDFs into chapter/module study packs instead of one huge Markdown file.
+
+## Chapter Plan
+
+| Chapter ID | Title | Range | Status | Output directory | Notes |
+| --- | --- | --- | --- | --- | --- |
+| {chapter_id} | {title} | {chapter} | scaffolded | chapters/{chapter_id} |  |
+"""
 
 
 FILES_ZH = {
@@ -63,9 +94,23 @@ FILES_ZH = {
 | LO1 | 能... | 闭卷回答包含... | Q1, E1 | [PDF p.x] |
 | LO2 | 能... | 能在新情境中... | Q2, E2 | [Section x] |
 
+## 知识点掌握标准
+
+| 知识点 | 掌握层级 | 闭卷标准 | 是否必须记忆 | 检查方式 | 来源 |
+| --- | --- | --- | --- | --- | --- |
+|  | recognize / explain / distinguish / sequence / apply / memorize / diagnose |  | 是 / 否 | Qx / Ex / Cx | [PDF p.x] |
+
+## 章节管理
+
+- 所属来源 ID：{source_id}
+- 章节 ID：{chapter_id}
+- 上一章：
+- 下一章：
+- 是否需要拆分为更多模块：
+
 ## 先修知识
 
-- 
+-
 
 ## 推荐学习顺序
 
@@ -81,39 +126,73 @@ FILES_ZH = {
 """,
     "01-lesson-notes.md": """# 课程笔记：{title}
 
+## 标题与范围
+
+- 章节：{title}
+- 来源：{source}
+- 页码或范围：{chapter}
+- 本章主题：
+
 ## 本章解决的问题
 
+用 3-6 句回答：
+
+- 为什么会有这个主题：
+- 它试图解决什么问题：
+- 学完之后应当会判断什么：
 - 原文依据：
 
 ## 概念主线
+
+用 3-5 条写出本章最重要的推进线，不要堆定义。
 
 1. 
 2. 
 3. 
 
-## 关键定义与来源
+## 关键概念
 
-| 概念 | 精确定义 | 直觉解释 | 来源 |
+| 名称 | 最小定义 | 直觉理解 | 易混概念 | 掌握层级 | 来源 |
+| --- | --- | --- | --- | --- | --- |
+|  |  | 教师补充： |  | explain / distinguish / apply / memorize | [PDF p.x] |
+
+## 小节闭环笔记
+
+### x.x 小节标题
+
+- 这一节回答什么问题：
+- 先给结论：
+- 原文依据：
+- 直觉理解：
+- 核心机制/展开：
+- 为什么这样设计：
+- 边界/易错点：
+- 最小自测：
+- 最小自测参考答案：
+
+### x.x 小节标题
+
+- 这一节回答什么问题：
+- 先给结论：
+- 原文依据：
+- 直觉理解：
+- 核心机制/展开：
+- 为什么这样设计：
+- 边界/易错点：
+- 最小自测：
+- 最小自测参考答案：
+
+## 章节级重要对比
+
+| 对比 | A 是什么 | B 是什么 | 关键差异 | 判断方法 | 来源 |
+| --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  | [PDF p.x] |
+
+## 章节级易错点
+
+| 常见误解 | 正确说法 | 为什么容易错 | 修正自测 |
 | --- | --- | --- | --- |
-|  |  | 教师补充： | [PDF p.x] |
-
-## 分层讲解
-
-### 1. 
-
-- 原文依据：
-- 教师补充：
-- 合理推断：
-- 待核对：
-- 检查点：
-
-### 2. 
-
-- 原文依据：
-- 教师补充：
-- 合理推断：
-- 待核对：
-- 检查点：
+|  |  |  |  |
 
 ## 最小例子
 
@@ -121,7 +200,7 @@ FILES_ZH = {
 
 ## 反例与边界
 
-- 
+-
 
 ## 公式 / 表格 / 图示说明
 
@@ -143,7 +222,17 @@ FILES_ZH = {
 | --- | --- | --- | --- | --- |
 |  |  |  |  |  |
 
-## 教师补充
+## 闭卷检查
+
+至少给出 5-8 个问题，覆盖本章总问题、关键流程、关键对比、最易错概念，以及至少一个“为什么这样设计”。
+
+| ID | 问题 | 参考答案要点 | 对应目标 |
+| --- | --- | --- | --- |
+| NQ1 |  |  | LOx |
+
+## 最低完成标准
+
+用“闭卷能回答什么”定义，不要写空话。
 
 - 
 
@@ -278,6 +367,63 @@ FILES_ZH = {
 - 如果迁移题失败，补做反例/边界练习。
 - 如果公式误用，重写符号含义、适用条件和最小算例。
 """,
+    "06-memory-cards.md": """# 记忆卡片：{title}
+
+## 卡片集信息
+
+- 章节：{title}
+- 来源：{source}
+- 范围：{chapter}
+- 目标：
+
+## 必须记忆项筛选
+
+| 项目 | 层级 | 为什么要记 | 对应目标 | 来源 |
+| --- | --- | --- | --- | --- |
+|  | Core / Secondary / Trap |  | LOx | [PDF p.x] |
+
+## Core Cards
+
+### C01
+
+- 类型：definition | distinction | sequence | condition -> result | misconception repair | cloze
+- 提问：
+- 答案：
+- 来源：
+- 为什么要记：
+
+### C02
+
+- 类型：
+- 提问：
+- 答案：
+- 来源：
+- 为什么要记：
+
+## Secondary Cards
+
+### S01
+
+- 类型：
+- 提问：
+- 答案：
+- 来源：
+- 为什么要记：
+
+## Trap Cards
+
+### T01
+
+- 类型：distinction
+- 提问：
+- 答案：
+- 来源：
+- 常见错误：
+
+## 3 分钟口头复习
+
+-
+""",
     "source-map.md": """# 来源映射：{title}
 
 ## 抽取记录
@@ -348,6 +494,20 @@ FILES_EN = {
 | LO1 | Can... | Closed-book answer includes... | Q1, E1 | [PDF p.x] |
 | LO2 | Can... | Can apply in a new scenario... | Q2, E2 | [Section x] |
 
+## Knowledge-Point Mastery Standard
+
+| Knowledge point | Mastery level | Closed-book criterion | Must memorize | Check method | Source |
+| --- | --- | --- | --- | --- | --- |
+|  | recognize / explain / distinguish / sequence / apply / memorize / diagnose |  | yes / no | Qx / Ex / Cx | [PDF p.x] |
+
+## Chapter Management
+
+- Source ID: {source_id}
+- Chapter ID: {chapter_id}
+- Previous chapter:
+- Next chapter:
+- Needs further module split:
+
 ## Prerequisites
 
 - 
@@ -366,39 +526,73 @@ FILES_EN = {
 """,
     "01-lesson-notes.md": """# Lesson Notes: {title}
 
+## Title and Scope
+
+- Chapter: {title}
+- Source: {source}
+- Page or section range: {chapter}
+- Chapter topic:
+
 ## Problem This Chapter Solves
 
-- Source basis:
+Answer in 3-6 sentences:
+
+- Why this topic exists:
+- What problem it tries to solve:
+- What the learner should be able to judge after learning it:
+- Source evidence:
 
 ## Conceptual Spine
+
+Write the chapter's 3-5 most important moves. Do not dump definitions.
 
 1. 
 2. 
 3. 
 
-## Key Definitions and Sources
+## Key Concepts
 
-| Concept | Precise definition | Intuition | Source |
+| Name | Minimal definition | Intuition | Easy confusion | Mastery level | Source |
+| --- | --- | --- | --- | --- | --- |
+|  |  | Teacher supplement: |  | explain / distinguish / apply / memorize | [PDF p.x] |
+
+## Closed-Loop Subsection Notes
+
+### x.x Subsection title
+
+- Question this subsection answers:
+- Short conclusion:
+- Source evidence:
+- Intuition:
+- Mechanism / development:
+- Why this design or idea exists:
+- Boundary / common confusion:
+- Minimum self-check:
+- Self-check answer key:
+
+### x.x Subsection title
+
+- Question this subsection answers:
+- Short conclusion:
+- Source evidence:
+- Intuition:
+- Mechanism / development:
+- Why this design or idea exists:
+- Boundary / common confusion:
+- Minimum self-check:
+- Self-check answer key:
+
+## Chapter-Level Distinctions
+
+| Contrast | A means | B means | Key difference | Decision rule | Source |
+| --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  | [PDF p.x] |
+
+## Chapter-Level Traps
+
+| Common misconception | Correct version | Why it is tempting | Repair self-check |
 | --- | --- | --- | --- |
-|  |  | Teacher supplement: | [PDF p.x] |
-
-## Layered Explanation
-
-### 1. 
-
-- Source basis:
-- Teacher supplement:
-- Reasoned inference:
-- Needs verification:
-- Checkpoint:
-
-### 2. 
-
-- Source basis:
-- Teacher supplement:
-- Reasoned inference:
-- Needs verification:
-- Checkpoint:
+|  |  |  |  |
 
 ## Minimal Example
 
@@ -428,7 +622,17 @@ FILES_EN = {
 | --- | --- | --- | --- | --- |
 |  |  |  |  |  |
 
-## Teacher Supplements
+## Closed-Book Checks
+
+Include 5-8 prompts covering the chapter problem, key flow, key contrasts, easiest trap, and at least one "why this design exists" question.
+
+| ID | Prompt | Answer key | Objective |
+| --- | --- | --- | --- |
+| NQ1 |  |  | LOx |
+
+## Minimum Completion Standard
+
+Define this as what the learner can answer closed-book. Avoid vague claims.
 
 - 
 
@@ -563,6 +767,63 @@ FILES_EN = {
 - If a transfer exercise fails, practice counterexamples and boundary cases.
 - If a formula is misused, rewrite symbol meanings, conditions, and a minimal calculation.
 """,
+    "06-memory-cards.md": """# Memory Cards: {title}
+
+## Card Set Header
+
+- Chapter: {title}
+- Source: {source}
+- Scope: {chapter}
+- Goal:
+
+## Memorization Selection
+
+| Item | Tier | Why memorize | Objective | Source |
+| --- | --- | --- | --- | --- |
+|  | Core / Secondary / Trap |  | LOx | [PDF p.x] |
+
+## Core Cards
+
+### C01
+
+- Type: definition | distinction | sequence | condition -> result | misconception repair | cloze
+- Prompt:
+- Answer:
+- Source:
+- Why memorize:
+
+### C02
+
+- Type:
+- Prompt:
+- Answer:
+- Source:
+- Why memorize:
+
+## Secondary Cards
+
+### S01
+
+- Type:
+- Prompt:
+- Answer:
+- Source:
+- Why memorize:
+
+## Trap Cards
+
+### T01
+
+- Type: distinction
+- Prompt:
+- Answer:
+- Source:
+- Common wrong answer:
+
+## 3-Minute Oral Review
+
+-
+""",
     "source-map.md": """# Source Map: {title}
 
 ## Extraction Record
@@ -607,14 +868,17 @@ def slugify(value: str) -> str:
     return value
 
 
-def default_out_dir(title: str, created_at: datetime) -> Path:
-    slug = slugify(title)
+def stable_slug(value: str, prefix: str) -> str:
+    slug = slugify(value)
     if len(slug) >= 3:
-        base = Path(slug)
-    else:
-        digest = hashlib.sha1(title.encode("utf-8")).hexdigest()[:8]
-        stamp = created_at.strftime("%Y%m%d-%H%M%S")
-        base = Path(f"lesson-pack-{stamp}-{digest}")
+        return slug
+    digest = hashlib.sha1(value.encode("utf-8")).hexdigest()[:8]
+    return f"{prefix}-{digest}"
+
+
+def default_out_dir(title: str, created_at: datetime) -> Path:
+    slug = stable_slug(title, "lesson-pack")
+    base = Path(slug)
 
     candidate = base
     index = 2
@@ -622,6 +886,18 @@ def default_out_dir(title: str, created_at: datetime) -> Path:
         candidate = Path(f"{base}-{index}")
         index += 1
     return candidate
+
+
+def resolve_out_dir(args: argparse.Namespace, created_at: datetime) -> tuple[Path, str, str]:
+    source_seed = Path(args.source).stem if args.source else args.title
+    source_id = args.source_id or stable_slug(source_seed, "source")
+    chapter_id = args.chapter_id or stable_slug(args.chapter or args.title, "chapter")
+
+    if args.out:
+        return Path(args.out), source_id, chapter_id
+    if args.project_root:
+        return Path(args.project_root) / "lessons" / source_id / "chapters" / chapter_id, source_id, chapter_id
+    return default_out_dir(args.title, created_at), source_id, chapter_id
 
 
 def write_file(path: Path, content: str, overwrite: bool) -> dict[str, str]:
@@ -649,6 +925,9 @@ def main() -> int:
     parser.add_argument("--source", help="Source PDF or document path.")
     parser.add_argument("--chapter", help="Chapter, section, or page range.")
     parser.add_argument("--out", help="Output directory. Defaults to a unique slug from title.")
+    parser.add_argument("--project-root", help="Class project root. If --out is omitted, write under lessons/<source-id>/chapters/<chapter-id>.")
+    parser.add_argument("--source-id", help="ASCII source id for chapter-managed lesson output.")
+    parser.add_argument("--chapter-id", help="ASCII chapter/module id for chapter-managed lesson output.")
     parser.add_argument("--language", choices=["zh", "en"], default="zh")
     parser.add_argument("--pack", choices=["full", "short"], default="full")
     parser.add_argument("--require-source", action="store_true", help="Fail when --source or --chapter is missing.")
@@ -668,7 +947,7 @@ def main() -> int:
 
     created_at_dt = datetime.now()
     created_at = created_at_dt.isoformat(timespec="seconds")
-    out_dir = Path(args.out) if args.out else default_out_dir(args.title, created_at_dt)
+    out_dir, source_id, chapter_id = resolve_out_dir(args, created_at_dt)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     unspecified = "未指定" if args.language == "zh" else "unspecified"
@@ -681,6 +960,8 @@ def main() -> int:
         "title": args.title,
         "source": args.source or unspecified,
         "chapter": args.chapter or unspecified,
+        "source_id": source_id,
+        "chapter_id": chapter_id,
         "created_at": created_at,
         "template_version": TEMPLATE_VERSION,
     }
@@ -689,6 +970,11 @@ def main() -> int:
     results = {}
     for filename, template in templates.items():
         results[filename] = write_file(out_dir / filename, template.format(**values), args.overwrite)
+
+    if args.project_root and not args.out:
+        index_template = CHAPTER_INDEX_ZH if args.language == "zh" else CHAPTER_INDEX_EN
+        index_path = Path(args.project_root) / "lessons" / source_id / "chapter-index.md"
+        results["chapter-index.md"] = write_file(index_path, index_template.format(**values), overwrite=False)
 
     meta = {
         "title": args.title,
@@ -699,6 +985,10 @@ def main() -> int:
         "template_version": TEMPLATE_VERSION,
         "checker_version": CHECKER_VERSION,
         "created_at": created_at,
+        "project_root": str(Path(args.project_root).resolve()) if args.project_root else "",
+        "source_id": source_id,
+        "chapter_id": chapter_id,
+        "chapter_managed": bool(args.project_root and not args.out),
         "files": sorted(templates),
         "warnings": warnings,
     }
@@ -714,6 +1004,8 @@ def main() -> int:
         "checker_version": CHECKER_VERSION,
         "language": args.language,
         "pack": args.pack,
+        "source_id": source_id,
+        "chapter_id": chapter_id,
         "warnings": warnings,
         "results": results,
     }

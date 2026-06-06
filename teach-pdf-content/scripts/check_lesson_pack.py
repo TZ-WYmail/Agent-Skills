@@ -17,12 +17,15 @@ MIN_FILES = [
     "02-active-recall.md",
     "source-map.md",
 ]
-CHECKER_VERSION = "1.1"
+CHECKER_VERSION = "1.2"
 FULL_FILES = MIN_FILES + [
     "03-exercises.md",
     "04-glossary.md",
     "05-review-plan.md",
+    "06-memory-cards.md",
 ]
+MAX_MARKDOWN_CHARS = 120_000
+MAX_MARKDOWN_LINES = 1800
 
 PLACEHOLDER_PATTERNS = [
     ("placeholder_lo_x", re.compile(r"\bLOx\b")),
@@ -41,6 +44,20 @@ BLANK_REQUIRED_LABELS = [
     "常见错误",
     "来源依据",
     "进一步追问",
+    "这一节回答什么问题",
+    "先给结论",
+    "原文依据",
+    "直觉理解",
+    "核心机制/展开",
+    "为什么这样设计",
+    "边界/易错点",
+    "最小自测",
+    "最小自测参考答案",
+    "最低完成标准",
+    "类型",
+    "提问",
+    "答案",
+    "为什么要记",
     "自检标准",
     "答案要点",
     "为什么错",
@@ -60,6 +77,19 @@ BLANK_REQUIRED_LABELS = [
     "Common wrong answer",
     "Source basis",
     "Follow-up",
+    "Question this subsection answers",
+    "Short conclusion",
+    "Source evidence",
+    "Intuition",
+    "Mechanism / development",
+    "Why this design or idea exists",
+    "Boundary / common confusion",
+    "Minimum self-check",
+    "Self-check answer key",
+    "Minimum Completion Standard",
+    "Type",
+    "Answer",
+    "Why memorize",
     "Self-check standard",
     "Answer points",
     "Why it is wrong",
@@ -98,6 +128,75 @@ def scan_placeholders(path: Path, issues: list[dict[str, Any]]) -> None:
         for label in BLANK_REQUIRED_LABELS:
             if re.match(rf"^[-*]?\s*{re.escape(label)}[：:]\s*$", stripped):
                 add_issue(issues, "warning", "blank_required_label", path, index, f"`{label}` is blank")
+
+
+def check_markdown_size(path: Path, issues: list[dict[str, Any]]) -> None:
+    text = path.read_text(encoding="utf-8")
+    line_count = text.count("\n") + 1
+    if len(text) > MAX_MARKDOWN_CHARS:
+        add_issue(
+            issues,
+            "warning",
+            "oversized_markdown_file",
+            path,
+            1,
+            f"file has {len(text)} characters; split long course material into chapter/module packs",
+        )
+    if line_count > MAX_MARKDOWN_LINES:
+        add_issue(
+            issues,
+            "warning",
+            "oversized_markdown_file",
+            path,
+            1,
+            f"file has {line_count} lines; split long course material into chapter/module packs",
+        )
+
+
+def check_chapter_note_contract(root: Path, issues: list[dict[str, Any]]) -> None:
+    path = root / "01-lesson-notes.md"
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    required_groups = [
+        ("chapter_problem", ("本章解决的问题", "Problem This Chapter Solves")),
+        ("conceptual_spine", ("概念主线", "Conceptual Spine")),
+        ("closed_loop_subsections", ("小节闭环笔记", "Closed-Loop Subsection Notes")),
+        ("minimum_standard", ("最低完成标准", "Minimum Completion Standard")),
+    ]
+    for code, headings in required_groups:
+        if not any(heading in text for heading in headings):
+            add_issue(
+                issues,
+                "warning",
+                f"missing_{code}",
+                path,
+                1,
+                f"chapter note is missing required section: {' / '.join(headings)}",
+            )
+
+
+def check_memory_card_contract(root: Path, issues: list[dict[str, Any]], full: bool) -> None:
+    path = root / "06-memory-cards.md"
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    required_groups = [
+        ("memorization_selection", ("必须记忆项筛选", "Memorization Selection")),
+        ("core_cards", ("Core Cards",)),
+        ("trap_cards", ("Trap Cards",)),
+        ("oral_review", ("3 分钟口头复习", "3-Minute Oral Review")),
+    ]
+    for code, headings in required_groups:
+        if not any(heading in text for heading in headings):
+            add_issue(
+                issues,
+                "warning",
+                f"missing_{code}",
+                path,
+                1,
+                f"memory cards file is missing required section: {' / '.join(headings)}",
+            )
 
 
 def extract_ids(pattern: str, text: str) -> set[str]:
@@ -174,7 +273,10 @@ def check_pack(root: Path, full: bool) -> dict[str, Any]:
     check_required_files(root, issues, full)
     for path in sorted(root.glob("*.md")):
         scan_placeholders(path, issues)
+        check_markdown_size(path, issues)
     check_objective_mapping(root, issues)
+    check_chapter_note_contract(root, issues)
+    check_memory_card_contract(root, issues, full)
     check_meta_warnings(root, issues)
 
     errors = sum(1 for issue in issues if issue["severity"] == "error")
