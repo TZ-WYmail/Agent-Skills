@@ -11,8 +11,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-TEMPLATE_VERSION = "2.2"
-CHECKER_VERSION = "1.2"
+TEMPLATE_VERSION = "2.3"
+CHECKER_VERSION = "1.3"
 FULL_FILE_ORDER = [
     "00-learning-path.md",
     "01-lesson-notes.md",
@@ -21,6 +21,7 @@ FULL_FILE_ORDER = [
     "04-glossary.md",
     "05-review-plan.md",
     "06-memory-cards.md",
+    "07-code-extracts.md",
     "source-map.md",
 ]
 SHORT_FILE_ORDER = [
@@ -87,6 +88,22 @@ FILES_ZH = {
 - 深入学习：
 - 练习与复习：
 
+## 章节学习用时表
+
+| 学习块 | 来源范围 | 目标 | 任务 | 建议用时 | 完成检查 |
+| --- | --- | --- | --- | --- | --- |
+| 初读 | {chapter} | 建立章节地图 | 标出标题、关键概念、疑问 |  | 能说出本章解决的问题 |
+| 精学 |  | LOx | 学习核心小节并写闭环笔记 |  | 能闭卷解释核心机制 |
+| 练习 |  | LOx | 完成基础/核心题 |  | 对照答案区完成自评 |
+| 复习 |  | LOx | 记忆卡与错题回炉 |  | 3 分钟口头复述通过 |
+
+## 压缩学习方案
+
+| 可用时间 | 必做 | 可跳过 | 风险 |
+| --- | --- | --- | --- |
+| 30 分钟 |  |  |  |
+| 60 分钟 |  |  |  |
+
 ## 学习目标
 
 | ID | 可观察能力 | 达成标准 | 对应练习 | 来源 |
@@ -114,7 +131,7 @@ FILES_ZH = {
 
 ## 推荐学习顺序
 
-1. 
+1.
 2. 
 3. 
 
@@ -152,9 +169,9 @@ FILES_ZH = {
 
 ## 关键概念
 
-| 名称 | 最小定义 | 直觉理解 | 易混概念 | 掌握层级 | 来源 |
-| --- | --- | --- | --- | --- | --- |
-|  |  | 教师补充： |  | explain / distinguish / apply / memorize | [PDF p.x] |
+| 名称 | 最小定义 | 直觉理解 | 简单具体例子 | 易混概念 | 掌握层级 | 来源 |
+| --- | --- | --- | --- | --- | --- | --- |
+|  |  | 教师补充： | 教师补充： |  | explain / distinguish / apply / memorize | [PDF p.x] |
 
 ## 小节闭环笔记
 
@@ -164,6 +181,7 @@ FILES_ZH = {
 - 先给结论：
 - 原文依据：
 - 直觉理解：
+- 简单具体例子：
 - 核心机制/展开：
 - 为什么这样设计：
 - 边界/易错点：
@@ -176,6 +194,7 @@ FILES_ZH = {
 - 先给结论：
 - 原文依据：
 - 直觉理解：
+- 简单具体例子：
 - 核心机制/展开：
 - 为什么这样设计：
 - 边界/易错点：
@@ -242,36 +261,72 @@ FILES_ZH = {
 """,
     "02-active-recall.md": """# 主动回忆：{title}
 
+说明：题目区只放题目、目标、提示和来源。完整答案统一写在文件末尾的“答案区”。
+
 ## 闭卷解释题
 
-| ID | 目标 | 题目 | 自检标准 | 来源 |
+| ID | 目标 | 题目 | 提示 | 来源 |
 | --- | --- | --- | --- | --- |
-| Q1 | LO1 |  |  | [PDF p.x] |
+| Q1 | LO1 |  | 只提示关键词，不写完整答案 | [PDF p.x] |
 
 ## 概念辨析题
 
-| ID | 目标 | 题目 | 答案要点 | 常见错误 |
+| ID | 目标 | 题目 | 提示 | 常见误区提示 |
 | --- | --- | --- | --- | --- |
 | Q2 | LOx |  |  |  |
 
 ## 填空题
 
 1. 
-   - 答案：
+   - 提示：
 
 ## 错因判断题
 
 1. 错误说法：
-   - 为什么错：
-   - 正确说法：
+   - 提示：
 
 ## 迁移自测题
 
 1. 教师设计题，不是原文例题：
-   - 答案要点：
+   - 提示：
    - 检查的目标：
+
+## 答案区
+
+### Q1
+
+- 完整答案：
+- 自检标准：
+- 常见遗漏：
+- 来源依据：
+
+### Q2
+
+- 完整答案：
+- 判断步骤：
+- 常见错误：
+- 来源依据：
+
+### 填空题答案
+
+1.
+
+### 错因判断题答案
+
+1.
+   - 为什么错：
+   - 正确说法：
+
+### 迁移自测题答案
+
+1.
+   - 完整答案：
+   - 评分/自检要点：
+   - 教师设计题说明：
 """,
     "03-exercises.md": """# 练习与答案：{title}
+
+说明：练习区不写完整答案，只写题目、提示、目标和来源。完整答案、评分点、常见错误和代码答案统一写在文件末尾。
 
 ## Basic
 
@@ -281,11 +336,9 @@ FILES_ZH = {
 - 类型：recall | discrimination | procedure | error-correction | transfer
 - 难度：Basic
 - 题目：
-- 标准答案：
-- 评分要点：
-- 常见错误：
+- 提示：
 - 来源依据：
-- 进一步追问：
+- 进一步追问提示：
 
 ## Core
 
@@ -295,11 +348,9 @@ FILES_ZH = {
 - 类型：
 - 难度：Core
 - 题目：
-- 标准答案：
-- 评分要点：
-- 常见错误：
+- 提示：
 - 来源依据：
-- 进一步追问：
+- 进一步追问提示：
 
 ## Transfer
 
@@ -309,11 +360,47 @@ FILES_ZH = {
 - 类型：transfer
 - 难度：Transfer
 - 题目：教师设计题，不是原文例题。
+- 提示：
+- 来源依据或教师补充：
+- 进一步追问提示：
+
+## 完整答案与评分标准
+
+### E1
+
+- 标准答案：
+- 评分要点：
+- 常见错误：
+- 来源依据：
+- 如果涉及代码，完整代码：
+
+```text
+
+```
+
+### E2
+
+- 标准答案：
+- 评分要点：
+- 常见错误：
+- 来源依据：
+- 如果涉及代码，完整代码：
+
+```text
+
+```
+
+### E3
+
 - 标准答案：
 - 评分要点：
 - 常见错误：
 - 来源依据或教师补充：
-- 进一步追问：
+- 如果涉及代码，完整代码：
+
+```text
+
+```
 """,
     "04-glossary.md": """# 术语、公式与易混点：{title}
 
@@ -424,6 +511,48 @@ FILES_ZH = {
 
 -
 """,
+    "07-code-extracts.md": """# 代码整理：{title}
+
+## 使用说明
+
+- 本文件单独整理来源中的代码，尤其是扫描/OCR 得到的代码，方便阅读、复制和人工核对。
+- 如果本章没有代码，写明“未发现需要单独整理的代码”。
+- 不确定的 OCR token、缩进、换行、标点或运算符必须标为“待核对”。
+
+## 代码索引
+
+| ID | 来源位置 | 语言 | 可靠性 | 主题 | 状态 |
+| --- | --- | --- | --- | --- | --- |
+| Code1 | [PDF p.x] |  | 高 / 中 / 低 / 待核对 |  |  |
+
+## 可复制代码块
+
+### Code1
+
+- 来源位置：
+- 语言：
+- OCR/抽取可靠性：
+- 这段代码演示什么：
+- 待核对位置：
+
+```text
+
+```
+
+## 代码阅读笔记
+
+| ID | 关键行/片段 | 作用 | 易错点 | 来源 |
+| --- | --- | --- | --- | --- |
+| Code1 |  |  |  | [PDF p.x] |
+
+## 人工核对清单
+
+- [ ] 缩进已核对。
+- [ ] 标识符大小写已核对。
+- [ ] 运算符和标点已核对。
+- [ ] 换行和续行已核对。
+- [ ] 代码能否运行或只是伪代码已标明。
+""",
     "source-map.md": """# 来源映射：{title}
 
 ## 抽取记录
@@ -487,6 +616,22 @@ FILES_EN = {
 - Deep study:
 - Practice and review:
 
+## Chapter Study Time Table
+
+| Study block | Source range | Objective | Task | Suggested time | Completion check |
+| --- | --- | --- | --- | --- | --- |
+| First pass | {chapter} | Build a chapter map | Mark headings, key concepts, and questions |  | Can state the problem this chapter solves |
+| Deep study |  | LOx | Study core sections and write closed-loop notes |  | Can explain the main mechanism closed-book |
+| Practice |  | LOx | Complete Basic/Core exercises |  | Self-grade against the answer key |
+| Review |  | LOx | Use memory cards and recover wrong answers |  | Pass a 3-minute oral review |
+
+## Compressed Study Plan
+
+| Available time | Must do | Can skip | Risk |
+| --- | --- | --- | --- |
+| 30 minutes |  |  |  |
+| 60 minutes |  |  |  |
+
 ## Learning Objectives
 
 | ID | Observable performance | Mastery criterion | Assessed by | Source |
@@ -514,7 +659,7 @@ FILES_EN = {
 
 ## Recommended Order
 
-1. 
+1.
 2. 
 3. 
 
@@ -552,9 +697,9 @@ Write the chapter's 3-5 most important moves. Do not dump definitions.
 
 ## Key Concepts
 
-| Name | Minimal definition | Intuition | Easy confusion | Mastery level | Source |
-| --- | --- | --- | --- | --- | --- |
-|  |  | Teacher supplement: |  | explain / distinguish / apply / memorize | [PDF p.x] |
+| Name | Minimal definition | Intuition | Simple concrete example | Easy confusion | Mastery level | Source |
+| --- | --- | --- | --- | --- | --- | --- |
+|  |  | Teacher supplement: | Teacher supplement: |  | explain / distinguish / apply / memorize | [PDF p.x] |
 
 ## Closed-Loop Subsection Notes
 
@@ -564,6 +709,7 @@ Write the chapter's 3-5 most important moves. Do not dump definitions.
 - Short conclusion:
 - Source evidence:
 - Intuition:
+- Simple concrete example:
 - Mechanism / development:
 - Why this design or idea exists:
 - Boundary / common confusion:
@@ -576,6 +722,7 @@ Write the chapter's 3-5 most important moves. Do not dump definitions.
 - Short conclusion:
 - Source evidence:
 - Intuition:
+- Simple concrete example:
 - Mechanism / development:
 - Why this design or idea exists:
 - Boundary / common confusion:
@@ -642,36 +789,72 @@ Define this as what the learner can answer closed-book. Avoid vague claims.
 """,
     "02-active-recall.md": """# Active Recall: {title}
 
+Note: The prompt section contains only prompts, objectives, hints, and sources. Put complete answers in the final Answer Key.
+
 ## Closed-Book Explanation
 
-| ID | Objective | Prompt | Self-check standard | Source |
+| ID | Objective | Prompt | Hint | Source |
 | --- | --- | --- | --- | --- |
-| Q1 | LO1 |  |  | [PDF p.x] |
+| Q1 | LO1 |  | Hint only; do not write the complete answer here | [PDF p.x] |
 
 ## Concept Discrimination
 
-| ID | Objective | Prompt | Answer points | Common error |
+| ID | Objective | Prompt | Hint | Common-trap hint |
 | --- | --- | --- | --- | --- |
 | Q2 | LOx |  |  |  |
 
 ## Cloze Prompts
 
 1. 
-   - Answer:
+   - Hint:
 
 ## Error Diagnosis
 
 1. Wrong statement:
-   - Why it is wrong:
-   - Correct version:
+   - Hint:
 
 ## Transfer Self-Test
 
 1. Teacher-designed prompt, not a source example:
-   - Answer points:
+   - Hint:
    - Objective tested:
+
+## Answer Key
+
+### Q1
+
+- Complete answer:
+- Self-check standard:
+- Common omission:
+- Source basis:
+
+### Q2
+
+- Complete answer:
+- Decision steps:
+- Common error:
+- Source basis:
+
+### Cloze Answers
+
+1.
+
+### Error Diagnosis Answers
+
+1.
+   - Why it is wrong:
+   - Correct version:
+
+### Transfer Self-Test Answers
+
+1.
+   - Complete answer:
+   - Scoring/self-check points:
+   - Teacher-designed prompt note:
 """,
     "03-exercises.md": """# Exercises and Answers: {title}
+
+Note: Exercise sections contain prompts, hints, objectives, and sources only. Put complete answers, scoring points, common errors, and code answers at the end.
 
 ## Basic
 
@@ -681,11 +864,9 @@ Define this as what the learner can answer closed-book. Avoid vague claims.
 - Type: recall | discrimination | procedure | error-correction | transfer
 - Difficulty: Basic
 - Prompt:
-- Expected answer:
-- Scoring points:
-- Common wrong answer:
+- Hint:
 - Source basis:
-- Follow-up:
+- Follow-up hint:
 
 ## Core
 
@@ -695,11 +876,9 @@ Define this as what the learner can answer closed-book. Avoid vague claims.
 - Type:
 - Difficulty: Core
 - Prompt:
-- Expected answer:
-- Scoring points:
-- Common wrong answer:
+- Hint:
 - Source basis:
-- Follow-up:
+- Follow-up hint:
 
 ## Transfer
 
@@ -709,11 +888,47 @@ Define this as what the learner can answer closed-book. Avoid vague claims.
 - Type: transfer
 - Difficulty: Transfer
 - Prompt: Teacher-designed prompt, not a source example.
+- Hint:
+- Source basis or teacher supplement:
+- Follow-up hint:
+
+## Complete Answers and Scoring
+
+### E1
+
+- Expected answer:
+- Scoring points:
+- Common wrong answer:
+- Source basis:
+- Complete code if relevant:
+
+```text
+
+```
+
+### E2
+
+- Expected answer:
+- Scoring points:
+- Common wrong answer:
+- Source basis:
+- Complete code if relevant:
+
+```text
+
+```
+
+### E3
+
 - Expected answer:
 - Scoring points:
 - Common wrong answer:
 - Source basis or teacher supplement:
-- Follow-up:
+- Complete code if relevant:
+
+```text
+
+```
 """,
     "04-glossary.md": """# Terms, Formulas, and Confusions: {title}
 
@@ -823,6 +1038,48 @@ Define this as what the learner can answer closed-book. Avoid vague claims.
 ## 3-Minute Oral Review
 
 -
+""",
+    "07-code-extracts.md": """# Code Extracts: {title}
+
+## Usage Notes
+
+- Use this file to organize source code separately, especially scanned/OCR code, so it is easy to read, copy, and verify.
+- If the chapter has no code, state "No code snippets need separate extraction."
+- Mark uncertain OCR tokens, indentation, line breaks, punctuation, or operators as `Needs verification`.
+
+## Code Index
+
+| ID | Source location | Language | Reliability | Topic | Status |
+| --- | --- | --- | --- | --- | --- |
+| Code1 | [PDF p.x] |  | high / medium / low / needs verification |  |  |
+
+## Copyable Code Blocks
+
+### Code1
+
+- Source location:
+- Language:
+- OCR/extraction reliability:
+- What this code demonstrates:
+- Needs verification:
+
+```text
+
+```
+
+## Code Reading Notes
+
+| ID | Key line/snippet | Role | Common trap | Source |
+| --- | --- | --- | --- | --- |
+| Code1 |  |  |  | [PDF p.x] |
+
+## Manual Verification Checklist
+
+- [ ] Indentation checked.
+- [ ] Identifier casing checked.
+- [ ] Operators and punctuation checked.
+- [ ] Line breaks and continuations checked.
+- [ ] Runnable code vs pseudocode marked.
 """,
     "source-map.md": """# Source Map: {title}
 

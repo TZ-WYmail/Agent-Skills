@@ -42,7 +42,7 @@ Every full chapter note must contain:
 1. chapter title and source range
 2. chapter problem: what problem this chapter solves and why it matters
 3. conceptual spine in 3-5 lines
-4. key concepts with definition, intuition, easy confusion, and source
+4. key concepts with definition, intuition, one simple concrete example, easy confusion, and source
 5. core subsection notes with closed loops
 6. mechanisms, lifecycle steps, or argument flow in order
 7. important distinctions and boundary cases
@@ -61,6 +61,7 @@ For each core subsection, write a closed loop instead of a loose explanation:
 - Short conclusion:
 - Source evidence:
 - Intuition:
+- Simple concrete example:
 - Mechanism / development:
 - Why this design or idea exists:
 - Boundary / common confusion:
@@ -85,6 +86,66 @@ Use these levels:
 - `Diagnose`: identify why a proposed answer, interpretation, or solution is wrong.
 
 Every learning objective or key concept should state the mastery level, closed-book criterion, assessment item, and source reference.
+
+## Answer-Key Placement
+
+For recall questions and exercises, keep the prompt section answer-free. The prompt section may contain a short hint, source range, or relevant objective, but it must not include the complete answer.
+
+Put complete answers at the end of the file in a dedicated answer-key section:
+
+- For `02-active-recall.md`, use `## 答案区` or `## Answer Key`.
+- For `03-exercises.md`, use `## 完整答案与评分标准` or `## Complete Answers and Scoring`.
+
+Every answer key must include enough content for self-study:
+
+- the complete expected answer, not only a source citation
+- scoring or self-check points
+- common wrong answer or trap
+- complete code when the question asks for code
+- source basis or teacher-designed note
+
+Do not write "see source" as the answer. Source references support the answer; they do not replace it.
+
+## Concrete Examples
+
+Every key knowledge point in `01-lesson-notes.md` needs a simple concrete example. Prefer examples that are small enough to understand in one pass:
+
+- For definitions: give one positive example and, when useful, one non-example.
+- For processes: give a tiny ordered scenario.
+- For formulas: give a minimal calculation with symbols explained.
+- For code/API concepts: give a short runnable or copyable snippet when possible.
+- For abstract theory: give a toy case before any complex case.
+
+Mark examples as source-backed when they come from the source. Mark teacher-created examples as teacher supplements.
+
+## Code Extraction
+
+When the source contains code, especially scanned/OCR code, create `07-code-extracts.md` so the learner can read and copy code separately from prose notes.
+
+For each snippet, include:
+
+- source location: PDF page, book page, section, or figure/listing number
+- language if known
+- OCR reliability: high, medium, low, or needs manual verification
+- cleaned copyable code block
+- notes on uncertain tokens, missing indentation, wrapped lines, or source formatting
+- short explanation of what the snippet demonstrates
+
+Never silently "fix" uncertain scanned code. Use `待核对` / `Needs verification` for ambiguous identifiers, operators, punctuation, indentation, or line breaks.
+
+## Study Time Table
+
+Every chapter pack must include a per-chapter study time table in `00-learning-path.md`. The table should map study blocks to source sections, objectives, tasks, minutes, and completion checks.
+
+Use realistic, bounded blocks:
+
+- first pass reading
+- core concept explanation
+- closed-book recall
+- exercises or code practice
+- memory cards and review
+
+If the learner gives a deadline or available time, fit the table to that constraint. If not, provide a standard plan plus a compressed plan.
 
 ## Memory Card Selection
 
@@ -136,7 +197,12 @@ Rewrite or continue the note if any failure sign appears:
 - The output is mostly a definition dump.
 - The chapter problem is missing.
 - The conceptual spine is not visible early.
+- Key concepts have definitions but no simple concrete examples.
 - The reader cannot tell sequence, causality, or boundaries.
+- Questions contain full answers inline instead of keeping answers in the final answer key.
+- Answers are source citations only and do not include complete explanations or code.
+- Scanned/OCR code is mixed into prose notes instead of being cleaned into `07-code-extracts.md`.
+- The chapter has no study time table.
 - Names of functions, states, variables, or theories appear without their role.
 - A subsection explains "what" but never closes the loop on "why", "how", or "how to check".
 - Review questions have no answer keys.

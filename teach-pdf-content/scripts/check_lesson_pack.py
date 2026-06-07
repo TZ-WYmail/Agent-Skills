@@ -17,12 +17,13 @@ MIN_FILES = [
     "02-active-recall.md",
     "source-map.md",
 ]
-CHECKER_VERSION = "1.2"
+CHECKER_VERSION = "1.3"
 FULL_FILES = MIN_FILES + [
     "03-exercises.md",
     "04-glossary.md",
     "05-review-plan.md",
     "06-memory-cards.md",
+    "07-code-extracts.md",
 ]
 MAX_MARKDOWN_CHARS = 120_000
 MAX_MARKDOWN_LINES = 1800
@@ -53,6 +54,8 @@ BLANK_REQUIRED_LABELS = [
     "边界/易错点",
     "最小自测",
     "最小自测参考答案",
+    "简单具体例子",
+    "提示",
     "最低完成标准",
     "类型",
     "提问",
@@ -86,6 +89,8 @@ BLANK_REQUIRED_LABELS = [
     "Boundary / common confusion",
     "Minimum self-check",
     "Self-check answer key",
+    "Simple concrete example",
+    "Hint",
     "Minimum Completion Standard",
     "Type",
     "Answer",
@@ -162,6 +167,7 @@ def check_chapter_note_contract(root: Path, issues: list[dict[str, Any]]) -> Non
         ("chapter_problem", ("本章解决的问题", "Problem This Chapter Solves")),
         ("conceptual_spine", ("概念主线", "Conceptual Spine")),
         ("closed_loop_subsections", ("小节闭环笔记", "Closed-Loop Subsection Notes")),
+        ("concrete_examples", ("简单具体例子", "Simple concrete example")),
         ("minimum_standard", ("最低完成标准", "Minimum Completion Standard")),
     ]
     for code, headings in required_groups:
@@ -173,6 +179,43 @@ def check_chapter_note_contract(root: Path, issues: list[dict[str, Any]]) -> Non
                 path,
                 1,
                 f"chapter note is missing required section: {' / '.join(headings)}",
+            )
+
+
+def check_learning_path_contract(root: Path, issues: list[dict[str, Any]]) -> None:
+    path = root / "00-learning-path.md"
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    if not any(heading in text for heading in ("章节学习用时表", "Chapter Study Time Table")):
+        add_issue(
+            issues,
+            "warning",
+            "missing_study_time_table",
+            path,
+            1,
+            "learning path is missing a per-chapter study time table",
+        )
+
+
+def check_answer_key_contract(root: Path, issues: list[dict[str, Any]]) -> None:
+    required = {
+        "02-active-recall.md": ("答案区", "Answer Key"),
+        "03-exercises.md": ("完整答案与评分标准", "Complete Answers and Scoring"),
+    }
+    for filename, headings in required.items():
+        path = root / filename
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if not any(heading in text for heading in headings):
+            add_issue(
+                issues,
+                "warning",
+                "missing_final_answer_key",
+                path,
+                1,
+                f"{filename} is missing a final answer-key section: {' / '.join(headings)}",
             )
 
 
@@ -196,6 +239,28 @@ def check_memory_card_contract(root: Path, issues: list[dict[str, Any]], full: b
                 path,
                 1,
                 f"memory cards file is missing required section: {' / '.join(headings)}",
+            )
+
+
+def check_code_extract_contract(root: Path, issues: list[dict[str, Any]]) -> None:
+    path = root / "07-code-extracts.md"
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    required_groups = [
+        ("code_index", ("代码索引", "Code Index")),
+        ("copyable_code_blocks", ("可复制代码块", "Copyable Code Blocks")),
+        ("verification_checklist", ("人工核对清单", "Manual Verification Checklist")),
+    ]
+    for code, headings in required_groups:
+        if not any(heading in text for heading in headings):
+            add_issue(
+                issues,
+                "warning",
+                f"missing_{code}",
+                path,
+                1,
+                f"code extracts file is missing required section: {' / '.join(headings)}",
             )
 
 
@@ -275,8 +340,11 @@ def check_pack(root: Path, full: bool) -> dict[str, Any]:
         scan_placeholders(path, issues)
         check_markdown_size(path, issues)
     check_objective_mapping(root, issues)
+    check_learning_path_contract(root, issues)
     check_chapter_note_contract(root, issues)
+    check_answer_key_contract(root, issues)
     check_memory_card_contract(root, issues, full)
+    check_code_extract_contract(root, issues)
     check_meta_warnings(root, issues)
 
     errors = sum(1 for issue in issues if issue["severity"] == "error")

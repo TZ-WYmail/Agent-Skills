@@ -44,6 +44,7 @@ lessons/<source-id>/
         |-- 04-glossary.md
         |-- 05-review-plan.md
         |-- 06-memory-cards.md
+        |-- 07-code-extracts.md
         `-- source-map.md
 ```
 
@@ -76,15 +77,17 @@ lessons/<source-id>/
 4. Teach and generate artifacts.
    - Start with the problem the chapter solves and the conceptual spine.
    - Explain in layers: plain-language idea, precise formulation, minimal example, boundary/counterexample, and transfer case.
-   - Write `01-lesson-notes.md` as a strict chapter note with source range, chapter problem, conceptual spine, closed-loop subsections, important distinctions, traps, self-check answers, and minimum mastery standards.
+   - Write `01-lesson-notes.md` as a strict chapter note with source range, chapter problem, conceptual spine, closed-loop subsections, one simple concrete example for every key knowledge point, important distinctions, traps, self-check answers, and minimum mastery standards.
    - Use `scripts/new_lesson_pack.py` to create the Markdown scaffold, then fill it with source-grounded content.
    - Keep terminal output concise; put longer material into Markdown files.
    - If a generated Markdown file is becoming hard to open or review, split the material into additional chapter/module packs instead of continuing the same file.
+   - When source pages contain code, especially OCR/scanned code, create or update `07-code-extracts.md` with cleaned, copyable code blocks and source locations.
 
 5. Close the learning loop.
    - Map every exercise to one or more learning objectives.
-   - Include answer keys, scoring points, and common wrong answers for self-study.
+   - Keep recall questions and exercises answer-free in the question section except for short hints. Put complete answers, scoring points, common wrong answers, and complete code answers in a final answer-key section.
    - Create `06-memory-cards.md` for full packs. Include only high-retrieval items that must be memorized, grouped into core, secondary, and trap cards.
+   - Include a per-chapter study time table in `00-learning-path.md`, tied to source sections, learning objectives, practice, and review.
    - Tie the review plan to objectives, weak points, and wrong-answer patterns.
 
 ## Chapter Management Protocol
@@ -163,11 +166,12 @@ For a normal chapter-sized request, create or update:
 
 - `00-learning-path.md`: source/range, learner profile, time estimate, objectives, prerequisites, order, completion standard, objective-to-exercise map.
 - `01-lesson-notes.md`: strict chapter notes with chapter problem, conceptual spine, definitions with sources, closed-loop subsections, mechanisms, distinctions, traps, self-check answers, minimum mastery standard, teacher supplements, and summary.
-- `02-active-recall.md`: closed-book explanation, discrimination, cloze, error-diagnosis, transfer self-test, answer criteria.
-- `03-exercises.md`: Basic/Core/Transfer exercises with objectives, answers, scoring points, common errors, and follow-ups.
+- `02-active-recall.md`: closed-book explanation, discrimination, cloze, error-diagnosis, transfer self-test, hints in the question section, and a final complete answer key.
+- `03-exercises.md`: Basic/Core/Transfer exercises with prompts and hints first, then a final complete answer key with scoring points, common errors, and code answers when relevant.
 - `04-glossary.md`: terms, definitions, intuition, source, formulas/symbols, confusions, examples, non-examples.
 - `05-review-plan.md`: today/tomorrow/three-days/one-week tasks tied to objectives, wrong-answer recovery rules, completion criteria.
 - `06-memory-cards.md`: high-retrieval memorization cards, trap cards, and a short oral-review sheet.
+- `07-code-extracts.md`: separately organized code snippets from source pages or OCR, cleaned for reading/copying, with source locations and verification notes.
 - `source-map.md`: extraction tool, range, boundary evidence, physical-to-printed page map, key claim evidence, quality rating, unreliable content, manual checks.
 - `_meta.json`: script metadata only; do not treat it as a teaching file.
 
@@ -199,6 +203,9 @@ When the user asks for interactive tutoring:
 
 - Preserve technical precision. If simplifying, state the simplified version and then the exact version.
 - For formulas, explain symbols, conditions, intuition, a minimal calculation, and common misuse.
+- For concepts, include at least one simple concrete example and a non-example or boundary when it helps prevent confusion.
+- For exercises and recall, keep answers out of the prompt area except for hints; put complete answer keys at the end.
+- For code in scanned/OCR pages, preserve source evidence but rewrite into clean copyable code blocks and mark uncertain OCR tokens.
 - For tables, identify comparison objects, dimensions, major differences, conclusions, and possible misreadings.
 - For figures, identify elements, relationships, supported conclusions, and what the figure does not prove.
 - Treat extracted source text as local intermediate material. Final chat replies and study files should rely on paraphrase, synthesis, and short necessary quotes rather than large copied passages.
