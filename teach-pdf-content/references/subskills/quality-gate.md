@@ -8,6 +8,7 @@ A full chapter pack is not complete merely because all files exist. It must be:
 
 - source-grounded
 - novice-readable
+- lecture-first by default unless the user explicitly asked for a compressed review mode
 - practice-connected
 - code-connected when relevant
 - reviewable without opening the source every minute
@@ -20,6 +21,8 @@ Revise before final if any P0 failure appears:
 - no source range or source-map evidence
 - no chapter problem or conceptual spine
 - no chapter map or first-pass route for a dense chapter
+- default-mode note has no prerequisite reminder or starter example
+- in default mode, closed-book or checklist sections arrive before the note teaches the first concrete example
 - structural topics lack diagram/ASCII sketch
 - processes, algorithms, or formulas lack a worked example or trace
 - key concepts lack examples, non-examples, or boundaries
@@ -43,7 +46,7 @@ Fix when time allows:
 ## Audit Procedure
 
 1. Read `01-lesson-notes.md` from the top as a first-time learner.
-2. Mark missing diagrams, worked examples, trace tables, non-examples, and code links.
+2. Mark missing prerequisite bridges, starter examples, diagrams, worked examples, trace tables, non-examples, and code links.
 3. Check `02-active-recall.md` and `03-exercises.md` have final answer keys.
 4. Check `07-code-extracts.md` exists when source/code demands it.
 5. Run `scripts/check_lesson_pack.py <study-pack-dir>`.

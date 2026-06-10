@@ -11,6 +11,16 @@ Act as a rigorous teacher for supplied material. Help the user learn the source,
 
 Keep source-backed claims, teacher-created explanations, reasonable inferences, and extraction uncertainty visibly separate. Do not invent page numbers or pretend weak extraction is complete.
 
+## Output Mode Policy
+
+Choose an explicit output mode before drafting. If the user does not specify one, do not default to a balanced compression style. Default to `beginner_lecture`.
+
+- `beginner_lecture`: default mode. Use when the learner level is unknown, when the user says "teach", "explain", "start learning", or when the chapter is conceptually dense. Optimize `01-lesson-notes.md` for first-time learning: prerequisite bridge, starter example before dense definitions, one hard concept at a time, step-by-step traces before review compression, and review sections after the teaching flow.
+- `standard_study_pack`: use when the user explicitly wants a balanced pack, when the learner already finished a first pass, or when you are completing an existing pack that already has a lecture-like main note.
+- `review_cram`: use only when the user explicitly asks for review, exam sprint material, condensed notes, compare-notes output, or a checklist-first artifact.
+
+If the learner profile is missing, write for the first-time learner and let later files carry the recall, exercise, and cram burden.
+
 ## Subskill Routing
 
 This skill is intentionally modular. Treat the files under `references/subskills/` as subskills: load only the modules needed for the current task instead of reading every detailed protocol into context.
@@ -62,6 +72,7 @@ Use `scripts/init_class_project.py --project-root <dir> --course-title <title>` 
 
 1. Scope the learning task.
    - Identify source file, chapter/section/page range, output mode, target depth, deadline, language, learner level, and project root.
+   - If the user does not choose an output mode, set `beginner_lecture` by default and say so in the lesson model or study-pack metadata.
    - Ask one concise clarifying question only when the source or requested range cannot be inferred safely.
 
 2. Intake and extract the source.
@@ -80,6 +91,7 @@ Use `scripts/init_class_project.py --project-root <dir> --course-title <title>` 
    - Load `references/subskills/practice-builder.md` before creating recall, exercises, cards, review plans, or tutoring follow-ups.
    - Keep long material in Markdown files rather than terminal output.
    - Create `07-code-extracts.md` when source pages contain code or when implementation is central to the chapter.
+   - In `beginner_lecture`, teach in lecture order: chapter problem -> starter example -> diagram/trace -> precise definition -> boundary -> practice connection. Do not let review tables or closed-book checks crowd the top of the note.
 
 5. Close the loop and audit.
    - Map exercises, recall prompts, memory cards, and review tasks to objectives.
@@ -101,7 +113,7 @@ Do not paste large source excerpts into chat. Final study files should synthesiz
 ## Required Files For Full Chapter Packs
 
 - `00-learning-path.md`: source/range, learner profile, time estimate, objectives, prerequisites, sequence, completion standard, objective-to-exercise map.
-- `01-lesson-notes.md`: novice-readable chapter note with source-map link, chapter map, first-pass route, source-bounded concepts, closed-loop subsections, diagrams/traces/examples, distinctions, traps, self-checks, separated answer area, must-memorize split, practice mapping, 10-minute review route, and minimum mastery standards.
+- `01-lesson-notes.md`: beginner-first lecture note by default, with source-map link, output-mode note, prerequisite reminder, starter example, chapter map, first-pass route, source-bounded concepts, closed-loop subsections, diagrams/traces/examples, distinctions, traps, self-checks, separated answer area, must-memorize split, practice mapping, 10-minute review route, and minimum mastery standards.
 - `02-active-recall.md`: closed-book explanation, discrimination, cloze, error-diagnosis, transfer self-test, hints in question section, final answer key.
 - `03-exercises.md`: Basic/Core/Transfer exercises with prompts and hints first, final complete answer key with scoring, common errors, and code answers when relevant.
 - `04-glossary.md`: terms, definitions, intuition, source, formulas/symbols, confusions, examples, non-examples.
@@ -116,6 +128,7 @@ For a short request, generate only the files that carry learning value.
 
 - Preserve technical precision. If simplifying, state the simplified version and then the exact version.
 - Start with the problem the chapter solves and the conceptual spine.
+- Default to `beginner_lecture` unless the user explicitly asks for a more compressed mode.
 - Explain in layers: plain-language idea, precise formulation, minimal example, boundary/non-example, worked application.
 - For formulas, explain symbols, conditions, intuition, minimal calculation, and common misuse.
 - For processes or algorithms, include ordered steps plus a small trace table.
@@ -123,6 +136,7 @@ For a short request, generate only the files that carry learning value.
 - For programming-heavy material, connect concepts to code snippets, data layout, edge cases, and implementation pitfalls.
 - For exercises and recall, keep answers out of prompt sections except for hints; put complete answer keys at the end.
 - Prefer concrete examples and feedback over generic encouragement.
+- When teaching beginners, prefer one more small worked example over one more summary table.
 - Prefer chapter/module splitting over large monolithic notes.
 
 ## Roughness Guard
@@ -132,6 +146,7 @@ Before finalizing a study pack, audit `01-lesson-notes.md` as a first-time learn
 - No chapter map, first-pass route, or prerequisite signal.
 - Structural topics have no diagram or ASCII sketch.
 - Procedures, formulas, or algorithms have no worked step-by-step example.
+- In default mode, the first concrete example arrives only after dense tables, review sections, or large definition blocks.
 - Programming/data-structure chapters do not connect concepts to code snippets or `07-code-extracts.md`.
 - Data-structure or algorithm chapters omit required mini-patterns such as empty/null cases, index conventions, tag tables, stack traces, pseudocode, or small recurrence calculations when those topics appear.
 - Self-check answers are placed immediately after questions without separation.

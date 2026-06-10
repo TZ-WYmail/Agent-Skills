@@ -17,7 +17,7 @@ MIN_FILES = [
     "02-active-recall.md",
     "source-map.md",
 ]
-CHECKER_VERSION = "1.5"
+CHECKER_VERSION = "1.6"
 FULL_FILES = MIN_FILES + [
     "03-exercises.md",
     "04-glossary.md",
@@ -75,6 +75,13 @@ BLANK_REQUIRED_LABELS = [
     "公式限制",
     "表格限制",
     "图示限制",
+    "如果你已经学过一遍",
+    "如果你是第一次学",
+    "这一章默认依赖",
+    "如果这些还不稳，先回看",
+    "第一次阅读先不追求",
+    "先观察什么",
+    "看完后至少要能说出什么",
     "Prompt",
     "Expected answer",
     "Scoring points",
@@ -109,6 +116,13 @@ BLANK_REQUIRED_LABELS = [
     "Formula limitations",
     "Table limitations",
     "Figure limitations",
+    "If the learner already studied this once",
+    "If this is the learner's first pass",
+    "This chapter assumes",
+    "If these are weak, review first",
+    "On the first pass, do not try to memorize",
+    "What to notice first",
+    "What the learner must be able to say after this",
 ]
 
 
@@ -159,13 +173,34 @@ def check_markdown_size(path: Path, issues: list[dict[str, Any]]) -> None:
         )
 
 
+def load_meta(root: Path) -> dict[str, Any]:
+    path = root / "_meta.json"
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def resolve_output_mode(root: Path) -> str:
+    meta = load_meta(root)
+    value = meta.get("output_mode")
+    if isinstance(value, str) and value:
+        return value
+    return "beginner_lecture"
+
+
 def check_chapter_note_contract(root: Path, issues: list[dict[str, Any]]) -> None:
     path = root / "01-lesson-notes.md"
     if not path.exists():
         return
     text = path.read_text(encoding="utf-8")
+    output_mode = resolve_output_mode(root)
     required_groups = [
         ("source_map_link", ("source-map.md", "来源映射", "Source map")),
+        ("output_mode_note", ("输出模式", "Output mode")),
         ("how_to_use_note", ("如何使用本笔记", "How To Use This Note")),
         ("chapter_map", ("本章地图", "Chapter Map")),
         ("layered_route", ("分层学习路线", "Layered Study Route")),
@@ -180,6 +215,17 @@ def check_chapter_note_contract(root: Path, issues: list[dict[str, Any]]) -> Non
         ("quick_review_route", ("考前 10 分钟", "10-Minute Review")),
         ("minimum_standard", ("最低完成标准", "Minimum Completion Standard")),
     ]
+    if output_mode != "review_cram":
+        required_groups.extend(
+            [
+                ("mode_strategy", ("输出模式与学习策略", "Output Mode And Study Strategy")),
+                ("prerequisite_signal", ("先修提醒", "Prerequisite Reminder")),
+                (
+                    "starter_example",
+                    ("起步例子", "Starter Example For The First Pass", "First Worked Example"),
+                ),
+            ]
+        )
     for code, headings in required_groups:
         if not any(heading in text for heading in headings):
             add_issue(
@@ -190,7 +236,7 @@ def check_chapter_note_contract(root: Path, issues: list[dict[str, Any]]) -> Non
                 1,
                 f"chapter note is missing required section: {' / '.join(headings)}",
             )
-    check_roughness_signals(root, path, text, issues)
+    check_roughness_signals(root, path, text, issues, output_mode)
 
 
 def has_any(text: str, needles: tuple[str, ...]) -> bool:
@@ -198,7 +244,18 @@ def has_any(text: str, needles: tuple[str, ...]) -> bool:
     return any(needle.lower() in lower for needle in needles)
 
 
-def check_roughness_signals(root: Path, path: Path, text: str, issues: list[dict[str, Any]]) -> None:
+def find_heading_line(lines: list[str], headings: tuple[str, ...]) -> int | None:
+    lowered = tuple(heading.lower() for heading in headings)
+    for index, line in enumerate(lines, start=1):
+        stripped = line.strip().lower()
+        if stripped.startswith("#") and any(heading in stripped for heading in lowered):
+            return index
+    return None
+
+
+def check_roughness_signals(
+    root: Path, path: Path, text: str, issues: list[dict[str, Any]], output_mode: str
+) -> None:
     structural_terms = (
         "树",
         "二叉",
@@ -369,6 +426,35 @@ def check_roughness_signals(root: Path, path: Path, text: str, issues: list[dict
             add_issue(issues, "warning", code, path, 1, message)
 
     lines = text.splitlines()
+    if output_mode != "review_cram":
+        starter_line = find_heading_line(
+            lines,
+            ("起步例子", "Starter Example For The First Pass", "First Worked Example"),
+        )
+        key_concept_line = find_heading_line(
+            lines,
+            ("关键概念速览", "第二遍整理：关键概念速览", "Key Concept Overview", "Second-Pass Key Concept Overview"),
+        )
+        closed_book_line = find_heading_line(lines, ("闭卷检查", "Closed-Book Checks"))
+        if starter_line and key_concept_line and starter_line > key_concept_line:
+            add_issue(
+                issues,
+                "warning",
+                "starter_example_too_late",
+                path,
+                starter_line,
+                "default-mode note should place a starter example before the main key-concept summary table",
+            )
+        if starter_line and closed_book_line and closed_book_line < starter_line:
+            add_issue(
+                issues,
+                "warning",
+                "review_before_teaching",
+                path,
+                closed_book_line,
+                "default-mode note should not place closed-book checks before the first concrete example",
+            )
+
     for index, line in enumerate(lines[:-1], start=1):
         current = line.strip().lower()
         following = "\n".join(lines[index : min(index + 3, len(lines))]).lower()

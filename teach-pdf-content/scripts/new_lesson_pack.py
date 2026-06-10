@@ -11,8 +11,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-TEMPLATE_VERSION = "2.5"
-CHECKER_VERSION = "1.5"
+TEMPLATE_VERSION = "2.6"
+CHECKER_VERSION = "1.6"
 FULL_FILE_ORDER = [
     "00-learning-path.md",
     "01-lesson-notes.md",
@@ -30,6 +30,55 @@ SHORT_FILE_ORDER = [
     "02-active-recall.md",
     "source-map.md",
 ]
+
+OUTPUT_MODE_DETAILS = {
+    "zh": {
+        "beginner_lecture": {
+            "output_mode_label": "beginner_lecture（初学讲义优先）",
+            "output_mode_summary": "默认模式。先搭直觉和最小例子，再补定义、性质、公式和闭卷要求。",
+            "output_mode_first_pass": "先读“本章解决的问题”和“起步例子”，只抓主线、图示和最小过程，不急着背术语。",
+            "output_mode_second_pass": "回到关键概念、公式、边界和代码桥接，补齐精确定义与易错点。",
+            "output_mode_practice_gate": "能讲清起步例子和核心流程后，再进入闭卷检查、练习和记忆卡。",
+        },
+        "standard_study_pack": {
+            "output_mode_label": "standard_study_pack（平衡学习包）",
+            "output_mode_summary": "教学、回忆、练习并重，适合已经学过一遍后系统整理。",
+            "output_mode_first_pass": "先看章节地图、主线和代表性例子，建立整体框架。",
+            "output_mode_second_pass": "同步补定义、边界、公式和练习映射，形成完整学习包。",
+            "output_mode_practice_gate": "完成关键概念辨析后即可转入闭卷检查和题目训练。",
+        },
+        "review_cram": {
+            "output_mode_label": "review_cram（复习冲刺）",
+            "output_mode_summary": "只在用户明确要求压缩复习时使用，强调高频考点、对比和闭卷检查。",
+            "output_mode_first_pass": "先扫主线、必记定义、核心公式和易错点，跳过长铺垫。",
+            "output_mode_second_pass": "用最小例子校准理解，再集中做闭卷检查和错因辨析。",
+            "output_mode_practice_gate": "发现概念空洞时立刻回补最小例子和图示，不要只背清单。",
+        },
+    },
+    "en": {
+        "beginner_lecture": {
+            "output_mode_label": "beginner_lecture (beginner-first lecture note)",
+            "output_mode_summary": "Default mode. Build intuition and a tiny worked example first, then add definitions, properties, formulas, and closed-book requirements.",
+            "output_mode_first_pass": "Read the chapter problem and starter example first. Focus on the spine, diagram, and tiny process before memorizing terms.",
+            "output_mode_second_pass": "Return to key concepts, formulas, boundaries, and code bridges to tighten precision and traps.",
+            "output_mode_practice_gate": "Move to closed-book checks, exercises, and memory cards only after the learner can explain the starter example and core flow.",
+        },
+        "standard_study_pack": {
+            "output_mode_label": "standard_study_pack (balanced study pack)",
+            "output_mode_summary": "Balance teaching, recall, and practice for learners who already had a first pass.",
+            "output_mode_first_pass": "Start with the chapter map, spine, and representative example to rebuild the framework.",
+            "output_mode_second_pass": "Add definitions, boundaries, formulas, and practice mapping to complete the pack.",
+            "output_mode_practice_gate": "Once the learner can distinguish the core concepts, move into closed-book checks and exercises.",
+        },
+        "review_cram": {
+            "output_mode_label": "review_cram (exam-sprint review)",
+            "output_mode_summary": "Use only for explicit condensed-review requests. Emphasize high-frequency contrasts, traps, and closed-book checks.",
+            "output_mode_first_pass": "Scan the spine, must-memorize definitions, core formulas, and traps before reading long explanations.",
+            "output_mode_second_pass": "Use a tiny example to recalibrate understanding, then focus on closed-book checks and error repair.",
+            "output_mode_practice_gate": "If understanding is hollow, stop cramming and restore the smallest example or diagram before more checklist review.",
+        },
+    },
+}
 
 CHAPTER_INDEX_ZH = """# 章节索引：{source_id}
 
@@ -71,6 +120,14 @@ FILES_ZH = {
 - 范围：{chapter}
 - 创建时间：{created_at}
 - 模板版本：{template_version}
+- 输出模式：{output_mode_label}
+- 模式说明：{output_mode_summary}
+
+## 本章生成策略
+
+- 第一遍先做：{output_mode_first_pass}
+- 第二遍再做：{output_mode_second_pass}
+- 转入刷题前：{output_mode_practice_gate}
 
 ## 学习者画像
 
@@ -121,6 +178,7 @@ FILES_ZH = {
 
 - 所属来源 ID：{source_id}
 - 章节 ID：{chapter_id}
+- 输出模式 ID：{output_mode}
 - 上一章：
 - 下一章：
 - 是否需要拆分为更多模块：
@@ -151,33 +209,32 @@ FILES_ZH = {
 - 来源映射：`source-map.md`
 - 抽取质量/待核对：
 - 文件编码：UTF-8
+- 输出模式：{output_mode_label}
+- 模式说明：{output_mode_summary}
 - 本章主题：
 
 ## 如何使用本笔记
 
-- 第一遍必读：
-- 第二遍加强：
-- 做题前必须会：
+- 第一遍先做：{output_mode_first_pass}
+- 第二遍再做：{output_mode_second_pass}
+- 做题前必须会：{output_mode_practice_gate}
 - 配套主动回忆：`02-active-recall.md`
 - 配套练习：`03-exercises.md`
 - 配套代码摘录：`07-code-extracts.md`
 - 来源核对：`source-map.md`
 
-## 本章地图
+## 输出模式与学习策略
 
-用树状图或流程图展示本章知识结构。结构类、算法类、转换类章节必须有图示或 ASCII 草图。
+- 当前模式：{output_mode_label}
+- 默认写法：先讲起步例子，再讲定义、性质、公式和易错点；不要用总表代替展开讲解。
+- 如果你已经学过一遍：
+- 如果你是第一次学：
 
-```text
+## 先修提醒
 
-```
-
-## 分层学习路线
-
-| 层级 | 内容 | 完成标准 |
-| --- | --- | --- |
-| 第一遍必读 |  | 能说出核心问题和主线 |
-| 第二遍加强 |  | 能做核心例题和辨析题 |
-| 拓展/考试专项 |  | 能完成迁移题或综合题 |
+- 这一章默认依赖：
+- 如果这些还不稳，先回看：
+- 第一次阅读先不追求：
 
 ## 本章解决的问题
 
@@ -188,6 +245,26 @@ FILES_ZH = {
 - 学完之后应当会判断什么：
 - 原文依据：
 
+## 第一遍先看这个起步例子
+
+- 目标：用一个最小结构/最小输入先建立直觉。
+- 起步例子：
+
+```text
+
+```
+
+- 先观察什么：
+- 看完后至少要能说出什么：
+
+## 本章地图
+
+用树状图或流程图展示本章知识结构。结构类、算法类、转换类章节必须有图示或 ASCII 草图。
+
+```text
+
+```
+
 ## 概念主线
 
 用 3-5 条写出本章最重要的推进线，不要堆定义。
@@ -196,17 +273,19 @@ FILES_ZH = {
 2. 
 3. 
 
-## 关键概念速览
+## 分层学习路线
 
-| 名称 | 最小定义 | 直觉理解 | 掌握层级 | 闭卷标准 | 来源 |
-| --- | --- | --- | --- | --- | --- |
-|  |  | 教师补充： | explain / distinguish / apply / memorize |  | [PDF p.x] |
+| 层级 | 内容 | 完成标准 |
+| --- | --- | --- |
+| 第一遍必读 | {output_mode_first_pass} | 能说出核心问题、主线和起步例子的过程 |
+| 第二遍加强 | {output_mode_second_pass} | 能做核心例题和辨析题 |
+| 拓展/考试专项 | {output_mode_practice_gate} | 能完成迁移题或综合题 |
 
-## 关键概念例子与边界
+## 初学者卡点预警
 
-| 概念 | 正例 | 非例/边界 | 易混点 | 对应练习 |
-| --- | --- | --- | --- | --- |
-|  | 教师补充： |  |  | Qx / Ex |
+| 容易卡住的点 | 为什么会卡 | 过关动作 |
+| --- | --- | --- |
+|  |  |  |
 
 ## 小节闭环笔记
 
@@ -239,6 +318,18 @@ FILES_ZH = {
 - 代码对应：
 - 最小自测：
 - 答案位置：见文末“小节自测答案区”
+
+## 第二遍整理：关键概念速览
+
+| 名称 | 最小定义 | 直觉理解 | 掌握层级 | 闭卷标准 | 来源 |
+| --- | --- | --- | --- | --- | --- |
+|  |  | 教师补充： | explain / distinguish / apply / memorize |  | [PDF p.x] |
+
+## 关键概念例子与边界
+
+| 概念 | 正例 | 非例/边界 | 易混点 | 对应练习 |
+| --- | --- | --- | --- | --- |
+|  | 教师补充： |  |  | Qx / Ex |
 
 ## 章节级重要对比
 
@@ -693,6 +784,14 @@ FILES_EN = {
 - Range: {chapter}
 - Created: {created_at}
 - Template version: {template_version}
+- Output mode: {output_mode_label}
+- Mode summary: {output_mode_summary}
+
+## Generation Strategy
+
+- First pass: {output_mode_first_pass}
+- Second pass: {output_mode_second_pass}
+- Before drills: {output_mode_practice_gate}
 
 ## Learner Profile
 
@@ -743,6 +842,7 @@ FILES_EN = {
 
 - Source ID: {source_id}
 - Chapter ID: {chapter_id}
+- Output mode ID: {output_mode}
 - Previous chapter:
 - Next chapter:
 - Needs further module split:
@@ -773,33 +873,32 @@ FILES_EN = {
 - Source map: `source-map.md`
 - Extraction quality / needs verification:
 - File encoding: UTF-8
+- Output mode: {output_mode_label}
+- Mode summary: {output_mode_summary}
 - Chapter topic:
 
 ## How To Use This Note
 
-- First-pass essentials:
-- Second-pass strengthening:
-- Must know before exercises:
+- First pass: {output_mode_first_pass}
+- Second pass: {output_mode_second_pass}
+- Before exercises: {output_mode_practice_gate}
 - Companion active recall: `02-active-recall.md`
 - Companion exercises: `03-exercises.md`
 - Companion code extracts: `07-code-extracts.md`
 - Source verification: `source-map.md`
 
-## Chapter Map
+## Output Mode And Study Strategy
 
-Show the chapter's knowledge structure as a tree, flow, or ASCII sketch. Structural, algorithmic, and conversion-heavy chapters require a diagram or trace.
+- Current mode: {output_mode_label}
+- Default writing rule: teach the starter example before definitions, properties, formulas, and review compression. Do not let tables replace explanation.
+- If the learner already studied this once:
+- If this is the learner's first pass:
 
-```text
+## Prerequisite Reminder
 
-```
-
-## Layered Study Route
-
-| Layer | Content | Completion check |
-| --- | --- | --- |
-| First pass |  | Can state the core problem and spine |
-| Second pass |  | Can solve core examples and discriminations |
-| Extension / exam focus |  | Can complete transfer or synthesis tasks |
+- This chapter assumes:
+- If these are weak, review first:
+- On the first pass, do not try to memorize:
 
 ## Problem This Chapter Solves
 
@@ -810,6 +909,26 @@ Answer in 3-6 sentences:
 - What the learner should be able to judge after learning it:
 - Source evidence:
 
+## Starter Example For The First Pass
+
+- Goal: build intuition with the smallest useful structure or input.
+- Starter example:
+
+```text
+
+```
+
+- What to notice first:
+- What the learner must be able to say after this:
+
+## Chapter Map
+
+Show the chapter's knowledge structure as a tree, flow, or ASCII sketch. Structural, algorithmic, and conversion-heavy chapters require a diagram or trace.
+
+```text
+
+```
+
 ## Conceptual Spine
 
 Write the chapter's 3-5 most important moves. Do not dump definitions.
@@ -818,17 +937,19 @@ Write the chapter's 3-5 most important moves. Do not dump definitions.
 2. 
 3. 
 
-## Key Concept Overview
+## Layered Study Route
 
-| Name | Minimal definition | Intuition | Mastery level | Closed-book criterion | Source |
-| --- | --- | --- | --- | --- | --- |
-|  |  | Teacher supplement: | explain / distinguish / apply / memorize |  | [PDF p.x] |
+| Layer | Content | Completion check |
+| --- | --- | --- |
+| First pass | {output_mode_first_pass} | Can state the core problem, spine, and starter-example flow |
+| Second pass | {output_mode_second_pass} | Can solve core examples and discriminations |
+| Extension / exam focus | {output_mode_practice_gate} | Can complete transfer or synthesis tasks |
 
-## Key Concept Examples And Boundaries
+## Beginner Friction Warnings
 
-| Concept | Positive example | Non-example / boundary | Easy confusion | Matching practice |
-| --- | --- | --- | --- | --- |
-|  | Teacher supplement: |  |  | Qx / Ex |
+| Likely sticking point | Why it sticks | Recovery action |
+| --- | --- | --- |
+|  |  |  |
 
 ## Closed-Loop Subsection Notes
 
@@ -861,6 +982,18 @@ Write the chapter's 3-5 most important moves. Do not dump definitions.
 - Code connection:
 - Minimum self-check:
 - Answer location: see final "Subsection Self-Check Answer Key"
+
+## Second-Pass Key Concept Overview
+
+| Name | Minimal definition | Intuition | Mastery level | Closed-book criterion | Source |
+| --- | --- | --- | --- | --- | --- |
+|  |  | Teacher supplement: | explain / distinguish / apply / memorize |  | [PDF p.x] |
+
+## Key Concept Examples And Boundaries
+
+| Concept | Positive example | Non-example / boundary | Easy confusion | Matching practice |
+| --- | --- | --- | --- | --- |
+|  | Teacher supplement: |  |  | Qx / Ex |
 
 ## Chapter-Level Distinctions
 
@@ -1362,6 +1495,10 @@ def choose_files(language: str, pack: str) -> dict[str, str]:
     return {name: templates[name] for name in order}
 
 
+def choose_output_mode_details(language: str, output_mode: str) -> dict[str, str]:
+    return OUTPUT_MODE_DETAILS[language][output_mode]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Create Markdown files for a structured, source-grounded study pack."
@@ -1375,6 +1512,12 @@ def main() -> int:
     parser.add_argument("--chapter-id", help="ASCII chapter/module id for chapter-managed lesson output.")
     parser.add_argument("--language", choices=["zh", "en"], default="zh")
     parser.add_argument("--pack", choices=["full", "short"], default="full")
+    parser.add_argument(
+        "--output-mode",
+        choices=["beginner_lecture", "standard_study_pack", "review_cram"],
+        default="beginner_lecture",
+        help="Teaching mode for the study pack. Defaults to beginner-first lecture notes.",
+    )
     parser.add_argument("--require-source", action="store_true", help="Fail when --source or --chapter is missing.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files.")
     parser.add_argument("--json", action="store_true", help="Print a machine-readable JSON summary.")
@@ -1409,7 +1552,9 @@ def main() -> int:
         "chapter_id": chapter_id,
         "created_at": created_at,
         "template_version": TEMPLATE_VERSION,
+        "output_mode": args.output_mode,
     }
+    values.update(choose_output_mode_details(args.language, args.output_mode))
 
     templates = choose_files(args.language, args.pack)
     results = {}
@@ -1427,6 +1572,7 @@ def main() -> int:
         "chapter": values["chapter"],
         "language": args.language,
         "pack": args.pack,
+        "output_mode": args.output_mode,
         "template_version": TEMPLATE_VERSION,
         "checker_version": CHECKER_VERSION,
         "created_at": created_at,
@@ -1449,6 +1595,7 @@ def main() -> int:
         "checker_version": CHECKER_VERSION,
         "language": args.language,
         "pack": args.pack,
+        "output_mode": args.output_mode,
         "source_id": source_id,
         "chapter_id": chapter_id,
         "warnings": warnings,

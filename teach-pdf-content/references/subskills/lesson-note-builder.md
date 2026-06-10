@@ -6,17 +6,28 @@ Use this module before drafting or revising `01-lesson-notes.md`.
 
 The chapter note must be source-bounded, novice-readable, recall-friendly, and exercise-ready. It should teach the chapter, not merely compress the source.
 
+## Output Mode Default
+
+Choose an output mode before drafting. If the user does not specify a mode, use `beginner_lecture`.
+
+- `beginner_lecture`: default. Teach the chapter in first-pass order and delay review compression until after the main explanation.
+- `standard_study_pack`: balanced teaching plus review support.
+- `review_cram`: condensed review-only mode for explicit cram requests.
+
 ## Required Opening
 
 Every full `01-lesson-notes.md` should start with:
 
 1. title and source range
 2. source-map link, extraction-quality note, and UTF-8 note when files are created on Windows
-3. how to use this note
-4. chapter map or knowledge tree
-5. first-pass / second-pass / extension route
-6. chapter problem and conceptual spine
-7. links to relevant pack files such as `02-active-recall.md`, `03-exercises.md`, `07-code-extracts.md`, and `source-map.md`
+3. output mode and why it was chosen when not obvious
+4. how to use this note
+5. prerequisite reminder
+6. starter example or toy case for the first pass
+7. chapter map or knowledge tree
+8. first-pass / second-pass / extension route
+9. chapter problem and conceptual spine
+10. links to relevant pack files such as `02-active-recall.md`, `03-exercises.md`, `07-code-extracts.md`, and `source-map.md`
 
 ## Key Concept Contract
 
@@ -62,9 +73,12 @@ Choose the example format by material type:
 - Conversion rule: before/after diagram.
 - Abstract theory: toy case before general statement.
 
+For `beginner_lecture`, place the first worked example before large summary tables whenever possible.
+
 ## Beginner Readability Rules
 
 - Introduce prerequisites before using dependent terms.
+- In `beginner_lecture`, do not open with a review checklist, a large concept table, or mastery standards before the learner sees the first concrete example.
 - Mark what must be memorized, what must be understood, and what must be practiced.
 - Add difficulty labels when a chapter mixes basic and advanced content.
 - Do not let a large table replace explanation.
@@ -90,6 +104,6 @@ Before considering the note complete, verify that a learner can:
 
 1. explain the chapter problem,
 2. draw or trace the core structures/processes,
-3. do one worked example per hard concept,
+3. do one worked example per hard concept, with the first hard concept introduced through an example instead of a table dump,
 4. distinguish the main confusions,
 5. find the matching recall/exercise/code file.

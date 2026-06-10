@@ -59,6 +59,15 @@ When the chapter contains the following topics, include the matching mini-patter
 - Conversions need before/after diagrams.
 - Recursive processes need call/return or state-tree sketches.
 
+## Beginner-First Delivery
+
+When output mode is `beginner_lecture` or the learner level is unknown:
+
+- start each hard topic with a tiny structure, tiny input, or 5-8 node example before general rules
+- keep one representation visible while explaining the operation or traversal
+- prefer a trace table plus a short explanation over a dense summary table
+- delay complexity and memorization-only compression until after the learner can trace the mechanism
+
 ## C Implementation Bridge
 
 When teaching C data structures, connect concepts to:

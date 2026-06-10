@@ -26,9 +26,19 @@ lessons/<source-id>/
 
 If the requested range contains more than one chapter or would create a very large note, first create or update `chapter-index.md` with chapter boundaries, source ranges, status, and the recommended generation order. Then generate one chapter pack at a time.
 
+## Output Mode Selection
+
+Choose one of these modes before drafting:
+
+- `beginner_lecture`: default mode. Use when learner level is unknown or when the user asks to be taught. Prioritize first-pass comprehension over compression.
+- `standard_study_pack`: balanced mode for learners who already have first exposure and want a full pack with teaching plus recall support.
+- `review_cram`: condensed mode for explicit review or exam-sprint requests. Use only when the user asks for compression.
+
+If the user does not specify a mode, default to `beginner_lecture`. Do not silently choose a balanced review style.
+
 ## Chapter Note Contract
 
-A real chapter note must be source-bounded, novice-readable, recall-friendly, and strict enough for later closed-book review.
+A real chapter note must be source-bounded, novice-readable, recall-friendly, and strict enough for later closed-book review. In the default mode, it must also read like a lecture note for a first-time learner instead of a compressed review sheet.
 
 Before writing or rewriting notes:
 
@@ -42,25 +52,31 @@ Every full chapter note must contain:
 1. chapter title and source range
 2. source-map link, source range, extraction-quality note, and encoding note when relevant
 3. how to use this note and which companion files to open
-4. chapter map or knowledge tree for dense chapters
-5. first-pass, second-pass, and extension route when the chapter mixes difficulty levels
+4. output mode note when relevant, especially when using the default `beginner_lecture`
+5. prerequisite signal before dependent terms appear
 6. chapter problem: what problem this chapter solves and why it matters
-7. conceptual spine in 3-5 lines
-8. key concepts with definition, intuition, one simple concrete example, easy confusion, non-example or boundary, and source
-9. core subsection notes with closed loops
-10. mechanisms, lifecycle steps, or argument flow in order
-11. important distinctions and boundary cases
-12. common mistakes or traps with correction actions
-13. closed-book checks with separated answer keys
-14. minimum mastery standard
-15. must-memorize vs understand-only split
-16. practice mapping from mastery standards to recall/exercise IDs
-17. 10-minute review route for dense chapters
+7. starter worked example or toy case before dense definition tables or the first hard subsection
+8. chapter map or knowledge tree for dense chapters
+9. first-pass, second-pass, and extension route when the chapter mixes difficulty levels
+10. conceptual spine in 3-5 lines
+11. key concepts with definition, intuition, one simple concrete example, easy confusion, non-example or boundary, and source
+12. core subsection notes with closed loops
+13. mechanisms, lifecycle steps, or argument flow in order
+14. important distinctions and boundary cases
+15. common mistakes or traps with correction actions
+16. closed-book checks with separated answer keys
+17. minimum mastery standard
+18. must-memorize vs understand-only split
+19. practice mapping from mastery standards to recall/exercise IDs
+20. 10-minute review route for dense chapters
 
 ## Novice Learnability Contract
 
 A note that is structurally complete can still be too rough for a beginner. For full chapter notes, add the missing representation before finalizing:
 
+- Default to `beginner_lecture` unless the user explicitly asks for a more compressed mode.
+- Prerequisites must appear before dependent terms are used casually.
+- In `beginner_lecture`, the first worked example should appear before the main concept summary table or no later than the first hard subsection.
 - Dense or branching chapters need a chapter map near the top.
 - Structural concepts need a diagram, ASCII sketch, or labeled table.
 - Procedures, algorithms, conversions, and formulas need a worked step-by-step example.
@@ -219,6 +235,7 @@ Group cards into `Core`, `Secondary`, and `Trap`. Add a 3-minute oral review at 
 Rewrite or continue the note if any failure sign appears:
 
 - The output is mostly a definition dump.
+- The note reads like a review sheet before it teaches the first concrete example.
 - The chapter problem is missing.
 - The conceptual spine is not visible early.
 - Key concepts have definitions but no simple concrete examples.
@@ -239,6 +256,7 @@ These patterns are especially likely to produce notes that look complete but do 
 
 - A big table replaces explanation.
 - Definitions appear before the learner knows why they matter.
+- Review or checklist sections appear before the first real example in the default mode.
 - Examples are too small to train the target skill.
 - A formula is stated but never used.
 - An algorithm is described but never traced.
