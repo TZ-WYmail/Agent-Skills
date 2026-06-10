@@ -10,6 +10,7 @@ Use this reference when choosing lesson structure, exercise type, or feedback st
 | Mathematical or formal material | definition -> assumptions -> theorem/rule -> proof intuition -> worked example -> counterexample | derivation, procedure, error correction |
 | Research paper | question -> claim -> method -> evidence -> limitation -> replication/application | claim-evidence mapping, critique, transfer |
 | Programming/API documentation | input -> steps -> output -> failure modes -> diagnostics -> practice task | procedure, debugging, scenario practice |
+| Computer science / data structures | problem -> logical structure -> storage representation -> operations -> trace -> implementation pitfall | diagram labeling, procedure trace, code reading, error correction |
 | Statistics/ML material | data/problem setup -> model/estimator -> assumptions -> objective -> evaluation -> failure cases | formula interpretation, boundary cases, experiment critique |
 | Humanities text | central question -> argument structure -> key concepts -> position comparison -> interpretive tension | close reading, comparison, argument reconstruction |
 | Case study | facts -> decision point -> constraints -> alternatives -> tradeoffs -> outcome | diagnosis, decision justification, transfer case |
@@ -35,6 +36,14 @@ For tools and APIs:
 - Teach inputs, outputs, defaults, failure modes, and diagnostics.
 - Include one "wrong usage" exercise and one realistic task.
 - Prefer runnable examples when the workspace supports them.
+
+For computer science and data structures:
+
+- Separate logical structure from storage representation.
+- Include a diagram or ASCII sketch for trees, graphs, linked structures, and state spaces.
+- Include one trace table for algorithms, conversions, recursion, or formulas.
+- Connect concepts to C structs, array indices, pointers, null/empty cases, and implementation pitfalls when relevant.
+- Use at least one error-diagnosis exercise for common bugs such as off-by-one, missing base case, or confusing pointer meaning.
 
 For humanities:
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "Teach PDF Content"
-  short_description: "Turn supplied PDFs or course readings into chapter-managed, source-grounded study packs."
-  default_prompt: "Use $teach-pdf-content to teach the specified PDF chapter or course reading, split long sources into chapter packs, then create source-grounded notes with concrete examples, mastery standards, recall questions with final answer keys, exercises with complete answers, glossary, memory cards, code extracts, study time tables, and a review plan."
+  short_description: "Turn supplied PDFs or course readings into modular, source-grounded study packs with quality gates."
+  default_prompt: "Use $teach-pdf-content to teach the specified PDF chapter or course reading. Route through the needed subskill modules for source intake, lesson notes, practice, quality gate, and CS/data-structure content when relevant; split long sources into chapter packs; create source-grounded notes with diagrams or traces, concrete examples, implementation bridges, must-memorize and understand-only splits, practice mappings, 10-minute review routes, separated answer keys, exercises, glossary, memory cards, code extracts, study time tables, and a review plan; run the lesson-pack checker before reporting completion."

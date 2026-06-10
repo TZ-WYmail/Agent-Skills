@@ -40,15 +40,34 @@ Before writing or rewriting notes:
 Every full chapter note must contain:
 
 1. chapter title and source range
-2. chapter problem: what problem this chapter solves and why it matters
-3. conceptual spine in 3-5 lines
-4. key concepts with definition, intuition, one simple concrete example, easy confusion, and source
-5. core subsection notes with closed loops
-6. mechanisms, lifecycle steps, or argument flow in order
-7. important distinctions and boundary cases
-8. common mistakes or traps
-9. closed-book checks with answer keys
-10. minimum mastery standard
+2. source-map link, source range, extraction-quality note, and encoding note when relevant
+3. how to use this note and which companion files to open
+4. chapter map or knowledge tree for dense chapters
+5. first-pass, second-pass, and extension route when the chapter mixes difficulty levels
+6. chapter problem: what problem this chapter solves and why it matters
+7. conceptual spine in 3-5 lines
+8. key concepts with definition, intuition, one simple concrete example, easy confusion, non-example or boundary, and source
+9. core subsection notes with closed loops
+10. mechanisms, lifecycle steps, or argument flow in order
+11. important distinctions and boundary cases
+12. common mistakes or traps with correction actions
+13. closed-book checks with separated answer keys
+14. minimum mastery standard
+15. must-memorize vs understand-only split
+16. practice mapping from mastery standards to recall/exercise IDs
+17. 10-minute review route for dense chapters
+
+## Novice Learnability Contract
+
+A note that is structurally complete can still be too rough for a beginner. For full chapter notes, add the missing representation before finalizing:
+
+- Dense or branching chapters need a chapter map near the top.
+- Structural concepts need a diagram, ASCII sketch, or labeled table.
+- Procedures, algorithms, conversions, and formulas need a worked step-by-step example.
+- Programming-heavy chapters need a code bridge: data layout, snippet reference, empty/null case, and implementation pitfall.
+- Key concepts need a non-example or boundary when confusion is likely.
+- The reader must be able to tell what to memorize, what to understand, and what to practice.
+- Self-check answers must not sit immediately after the question unless hidden in a collapsible answer block.
 
 ## Subsection Closed Loop
 
@@ -66,10 +85,12 @@ For each core subsection, write a closed loop instead of a loose explanation:
 - Why this design or idea exists:
 - Boundary / common confusion:
 - Minimum self-check:
-- Self-check answer key:
+- Answer location:
 ```
 
 A hard subsection is incomplete if it only has a definition, a flow without purpose, a conclusion without mechanism, or a mechanism without boundary. At least one of these must appear: why the mechanism exists, what problem it prevents, what similar concept it differs from, or what error a beginner is likely to make.
+
+Put complete subsection self-check answers in a final `## 小节自测答案区` / `## Subsection Self-Check Answer Key` section, or hide them in `<details>` blocks. Do not train the learner to read the answer before attempting recall.
 
 ## Knowledge Mastery Contract
 
@@ -115,6 +136,9 @@ Every key knowledge point in `01-lesson-notes.md` needs a simple concrete exampl
 - For formulas: give a minimal calculation with symbols explained.
 - For code/API concepts: give a short runnable or copyable snippet when possible.
 - For abstract theory: give a toy case before any complex case.
+- For structures: give a labeled diagram or ASCII sketch.
+- For conversions: give before/after representation and one trace step.
+- For algorithms: give a trace table on a tiny input.
 
 Mark examples as source-backed when they come from the source. Mark teacher-created examples as teacher supplements.
 
@@ -208,3 +232,18 @@ Rewrite or continue the note if any failure sign appears:
 - Review questions have no answer keys.
 - The learner cannot tell what must be memorized versus what only needs understanding.
 - The generated Markdown is so large that it is hard to open or review.
+
+## Rough Note Anti-Patterns
+
+These patterns are especially likely to produce notes that look complete but do not teach well:
+
+- A big table replaces explanation.
+- Definitions appear before the learner knows why they matter.
+- Examples are too small to train the target skill.
+- A formula is stated but never used.
+- An algorithm is described but never traced.
+- A structure is described without a diagram or representation.
+- Code exists in `07-code-extracts.md` but `01-lesson-notes.md` never points to it.
+- Common mistakes are listed without correction actions.
+- Source citations are present but the learning path is unclear.
+- The note gives the self-check answer before the learner has a chance to recall.

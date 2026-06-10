@@ -17,7 +17,7 @@ MIN_FILES = [
     "02-active-recall.md",
     "source-map.md",
 ]
-CHECKER_VERSION = "1.3"
+CHECKER_VERSION = "1.5"
 FULL_FILES = MIN_FILES + [
     "03-exercises.md",
     "04-glossary.md",
@@ -25,6 +25,7 @@ FULL_FILES = MIN_FILES + [
     "06-memory-cards.md",
     "07-code-extracts.md",
 ]
+SCAN_FILES = sorted(set(FULL_FILES + ["chapter-index.md"]))
 MAX_MARKDOWN_CHARS = 120_000
 MAX_MARKDOWN_LINES = 1800
 
@@ -164,10 +165,19 @@ def check_chapter_note_contract(root: Path, issues: list[dict[str, Any]]) -> Non
         return
     text = path.read_text(encoding="utf-8")
     required_groups = [
+        ("source_map_link", ("source-map.md", "来源映射", "Source map")),
+        ("how_to_use_note", ("如何使用本笔记", "How To Use This Note")),
+        ("chapter_map", ("本章地图", "Chapter Map")),
+        ("layered_route", ("分层学习路线", "Layered Study Route")),
         ("chapter_problem", ("本章解决的问题", "Problem This Chapter Solves")),
         ("conceptual_spine", ("概念主线", "Conceptual Spine")),
         ("closed_loop_subsections", ("小节闭环笔记", "Closed-Loop Subsection Notes")),
-        ("concrete_examples", ("简单具体例子", "Simple concrete example")),
+        ("concrete_examples", ("简单具体例子", "Simple concrete example", "关键概念例子", "Key Concept Examples")),
+        ("self_check_answer_key", ("小节自测答案区", "Subsection Self-Check Answer Key")),
+        ("must_memorize", ("必须闭卷记住", "Must Memorize")),
+        ("understand_only", ("理解即可", "Understand Only")),
+        ("practice_mapping", ("练习映射", "Practice Mapping")),
+        ("quick_review_route", ("考前 10 分钟", "10-Minute Review")),
         ("minimum_standard", ("最低完成标准", "Minimum Completion Standard")),
     ]
     for code, headings in required_groups:
@@ -180,6 +190,215 @@ def check_chapter_note_contract(root: Path, issues: list[dict[str, Any]]) -> Non
                 1,
                 f"chapter note is missing required section: {' / '.join(headings)}",
             )
+    check_roughness_signals(root, path, text, issues)
+
+
+def has_any(text: str, needles: tuple[str, ...]) -> bool:
+    lower = text.lower()
+    return any(needle.lower() in lower for needle in needles)
+
+
+def check_roughness_signals(root: Path, path: Path, text: str, issues: list[dict[str, Any]]) -> None:
+    structural_terms = (
+        "树",
+        "二叉",
+        "图",
+        "链表",
+        "指针",
+        "状态",
+        "结构",
+        "tree",
+        "binary",
+        "graph",
+        "linked",
+        "pointer",
+        "state",
+        "structure",
+    )
+    process_terms = (
+        "算法",
+        "过程",
+        "步骤",
+        "公式",
+        "性质",
+        "转换",
+        "遍历",
+        "递归",
+        "algorithm",
+        "process",
+        "formula",
+        "property",
+        "conversion",
+        "traversal",
+        "recursion",
+    )
+    code_terms = (
+        "c语言",
+        "c 语言",
+        "代码",
+        "指针",
+        "链表",
+        "数组",
+        "struct",
+        "pointer",
+        "array",
+        "code",
+    )
+
+    if has_any(text, structural_terms) and not has_any(
+        text,
+        ("```text", "```mermaid", "图示", "ascii", "diagram", "sketch"),
+    ):
+        add_issue(
+            issues,
+            "warning",
+            "missing_structural_diagram",
+            path,
+            1,
+            "structural material appears to lack a diagram, ASCII sketch, or explicit figure section",
+        )
+
+    if has_any(text, process_terms) and not has_any(
+        text,
+        ("手算", "最小算例", "过程追踪", "步骤表", "trace table", "worked example", "minimal calculation"),
+    ):
+        add_issue(
+            issues,
+            "warning",
+            "missing_worked_trace",
+            path,
+            1,
+            "process/formula/algorithm material appears to lack a worked example or trace table",
+        )
+
+    if not has_any(text, ("非例", "反例", "边界", "non-example", "counterexample", "boundary")):
+        add_issue(
+            issues,
+            "warning",
+            "missing_non_example_or_boundary",
+            path,
+            1,
+            "chapter note should include non-examples, counterexamples, or boundaries",
+        )
+
+    code_extract = root / "07-code-extracts.md"
+    if code_extract.exists() and has_any(text + code_extract.read_text(encoding="utf-8"), code_terms):
+        if not has_any(text, ("07-code-extracts.md", "代码对应", "code connection", "code extracts")):
+            add_issue(
+                issues,
+                "warning",
+                "missing_code_extract_link",
+                path,
+                1,
+                "code extracts exist or code-heavy material is present, but the lesson note does not link to code extracts",
+            )
+        if not has_any(text, ("实现桥接", "Implementation Bridge", "struct", "typedef struct")):
+            add_issue(
+                issues,
+                "warning",
+                "missing_implementation_bridge",
+                path,
+                1,
+                "code-heavy material should include an implementation bridge or explicit C representation notes",
+            )
+
+    topic_checks = [
+        (
+            ("二叉树", "binary tree"),
+            ("五种基本形态", "five basic forms", "空二叉树", "empty binary tree"),
+            "missing_binary_tree_forms",
+            "binary-tree material should mention empty tree/null case and five basic forms when introduced",
+        ),
+        (
+            ("遍历", "traversal"),
+            ("层序", "level-order", "level order"),
+            "missing_level_order_note",
+            "traversal material should mention level-order traversal or explicitly mark it out of scope",
+        ),
+        (
+            ("非递归", "non-recursive"),
+            ("栈状态", "stack-state", "stack state", "栈内元素", "what the stack stores"),
+            "missing_stack_trace",
+            "non-recursive traversal should include a stack-state trace and say what the stack stores",
+        ),
+        (
+            ("线索", "threaded"),
+            ("LTag =", "RTag =", "tag 表", "tag table", "Thread"),
+            "missing_thread_tag_table",
+            "threaded-tree material should include an LTag/RTag meaning table or pointer/tag rewrite example",
+        ),
+        (
+            ("并查集", "MFSet", "union-find"),
+            ("均摊", "amortized", "反 Ackermann", "inverse Ackermann"),
+            "missing_union_find_amortized_note",
+            "optimized union-find material should describe near-constant performance as amortized when discussed",
+        ),
+        (
+            ("赫夫曼", "Huffman"),
+            ("权值相等", "不唯一", "tie", "non-unique"),
+            "missing_huffman_tie_note",
+            "Huffman material should mention that equal weights can produce non-unique trees/codes",
+        ),
+        (
+            ("赫夫曼", "Huffman", "WPL"),
+            ("路径长度按边", "边数", "root to root", "path length counted"),
+            "missing_wpl_path_length_note",
+            "WPL material should state that path length is counted by edges or otherwise define the convention",
+        ),
+        (
+            ("回溯", "backtracking"),
+            ("伪码", "choose", "recurse", "undo", "撤销"),
+            "missing_backtracking_pseudocode",
+            "backtracking material should include choose/recurse/undo pseudocode or an equivalent state update pattern",
+        ),
+        (
+            ("Catalan", "计数"),
+            ("b0", "b1", "b2", "b3", "递推手算", "hand calculation"),
+            "missing_catalan_hand_calculation",
+            "tree-counting material should include a small recurrence hand calculation",
+        ),
+        (
+            ("递归", "recursion"),
+            ("空树", "NULL", "空指针", "base case", "empty tree"),
+            "missing_recursion_base_case",
+            "recursive data-structure material should mention the empty/null base case",
+        ),
+    ]
+    for signals, required, code, message in topic_checks:
+        if has_any(text, signals) and not has_any(text, required):
+            add_issue(issues, "warning", code, path, 1, message)
+
+    lines = text.splitlines()
+    for index, line in enumerate(lines[:-1], start=1):
+        current = line.strip().lower()
+        following = "\n".join(lines[index : min(index + 3, len(lines))]).lower()
+        if ("最小自测" in current or "minimum self-check" in current) and (
+            "参考答案" in following or "self-check answer key" in following
+        ):
+            add_issue(
+                issues,
+                "warning",
+                "inline_self_check_answer",
+                path,
+                index,
+                "self-check answer appears immediately after the prompt; move it to a final answer section or collapsible block",
+            )
+            break
+
+    for index, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if stripped.startswith("|") and ("关键概念" in "\n".join(lines[max(index - 4, 0) : index]) or "Key Concept" in "\n".join(lines[max(index - 4, 0) : index])):
+            column_count = stripped.count("|") - 1
+            if column_count > 6:
+                add_issue(
+                    issues,
+                    "warning",
+                    "wide_key_concept_table",
+                    path,
+                    index,
+                    f"key concept table has {column_count} columns; split wide tables for beginner readability",
+                )
+                break
 
 
 def check_learning_path_contract(root: Path, issues: list[dict[str, Any]]) -> None:
@@ -336,7 +555,10 @@ def check_required_files(root: Path, issues: list[dict[str, Any]], full: bool) -
 def check_pack(root: Path, full: bool) -> dict[str, Any]:
     issues: list[dict[str, Any]] = []
     check_required_files(root, issues, full)
-    for path in sorted(root.glob("*.md")):
+    for filename in SCAN_FILES:
+        path = root / filename
+        if not path.exists():
+            continue
         scan_placeholders(path, issues)
         check_markdown_size(path, issues)
     check_objective_mapping(root, issues)

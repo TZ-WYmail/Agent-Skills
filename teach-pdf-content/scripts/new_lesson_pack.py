@@ -11,8 +11,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-TEMPLATE_VERSION = "2.3"
-CHECKER_VERSION = "1.3"
+TEMPLATE_VERSION = "2.5"
+CHECKER_VERSION = "1.5"
 FULL_FILE_ORDER = [
     "00-learning-path.md",
     "01-lesson-notes.md",
@@ -148,7 +148,36 @@ FILES_ZH = {
 - 章节：{title}
 - 来源：{source}
 - 页码或范围：{chapter}
+- 来源映射：`source-map.md`
+- 抽取质量/待核对：
+- 文件编码：UTF-8
 - 本章主题：
+
+## 如何使用本笔记
+
+- 第一遍必读：
+- 第二遍加强：
+- 做题前必须会：
+- 配套主动回忆：`02-active-recall.md`
+- 配套练习：`03-exercises.md`
+- 配套代码摘录：`07-code-extracts.md`
+- 来源核对：`source-map.md`
+
+## 本章地图
+
+用树状图或流程图展示本章知识结构。结构类、算法类、转换类章节必须有图示或 ASCII 草图。
+
+```text
+
+```
+
+## 分层学习路线
+
+| 层级 | 内容 | 完成标准 |
+| --- | --- | --- |
+| 第一遍必读 |  | 能说出核心问题和主线 |
+| 第二遍加强 |  | 能做核心例题和辨析题 |
+| 拓展/考试专项 |  | 能完成迁移题或综合题 |
 
 ## 本章解决的问题
 
@@ -167,11 +196,17 @@ FILES_ZH = {
 2. 
 3. 
 
-## 关键概念
+## 关键概念速览
 
-| 名称 | 最小定义 | 直觉理解 | 简单具体例子 | 易混概念 | 掌握层级 | 来源 |
-| --- | --- | --- | --- | --- | --- | --- |
-|  |  | 教师补充： | 教师补充： |  | explain / distinguish / apply / memorize | [PDF p.x] |
+| 名称 | 最小定义 | 直觉理解 | 掌握层级 | 闭卷标准 | 来源 |
+| --- | --- | --- | --- | --- | --- |
+|  |  | 教师补充： | explain / distinguish / apply / memorize |  | [PDF p.x] |
+
+## 关键概念例子与边界
+
+| 概念 | 正例 | 非例/边界 | 易混点 | 对应练习 |
+| --- | --- | --- | --- | --- |
+|  | 教师补充： |  |  | Qx / Ex |
 
 ## 小节闭环笔记
 
@@ -182,11 +217,13 @@ FILES_ZH = {
 - 原文依据：
 - 直觉理解：
 - 简单具体例子：
+- 图示/过程追踪：
 - 核心机制/展开：
 - 为什么这样设计：
 - 边界/易错点：
+- 代码对应：
 - 最小自测：
-- 最小自测参考答案：
+- 答案位置：见文末“小节自测答案区”
 
 ### x.x 小节标题
 
@@ -195,11 +232,13 @@ FILES_ZH = {
 - 原文依据：
 - 直觉理解：
 - 简单具体例子：
+- 图示/过程追踪：
 - 核心机制/展开：
 - 为什么这样设计：
 - 边界/易错点：
+- 代码对应：
 - 最小自测：
-- 最小自测参考答案：
+- 答案位置：见文末“小节自测答案区”
 
 ## 章节级重要对比
 
@@ -241,13 +280,68 @@ FILES_ZH = {
 | --- | --- | --- | --- | --- |
 |  |  |  |  |  |
 
+## 实现桥接与专项补充
+
+用于 C、数据结构、算法、公式或转换较多的章节；不相关项可标为“不适用”。
+
+| 主题 | 代码/材料位置 | 表示方式 | 空/边界情况 | 常见实现陷阱 |
+| --- | --- | --- | --- | --- |
+|  | `07-code-extracts.md` |  |  |  |
+
+| 专项信号 | 本章是否涉及 | 必补内容 |
+| --- | --- | --- |
+| 二叉树 | 是 / 否 | 空树、五种基本形态、形态图、1-based/0-based 编号 |
+| 遍历 | 是 / 否 | 访问模板、6-8 结点追踪、层序说明、递归出口 |
+| 非递归遍历 | 是 / 否 | 栈状态表、栈内元素含义 |
+| 线索二叉树 | 是 / 否 | `LTag/RTag` 表、指针/tag 改写例 |
+| 并查集 | 是 / 否 | parent 数组追踪、先 Find 后合并、下标约定、均摊说明 |
+| 赫夫曼 | 是 / 否 | 合并表、WPL、路径长度、权值相等不唯一、前缀条件 |
+| 回溯 | 是 / 否 | 状态树、choose/recurse/undo 伪码、共享状态撤销 |
+| Catalan/计数 | 是 / 否 | `b0,b1,b2,b3` 手算、`b_n`/`C_n`、有序树 n-1 偏移 |
+
 ## 闭卷检查
 
-至少给出 5-8 个问题，覆盖本章总问题、关键流程、关键对比、最易错概念，以及至少一个“为什么这样设计”。
+至少给出 5-8 个问题，覆盖本章总问题、关键流程、关键对比、最易错概念，以及至少一个“为什么这样设计”。题目区不写完整答案。
 
-| ID | 问题 | 参考答案要点 | 对应目标 |
+| ID | 难度 | 问题 | 提示 | 对应目标 | 答错回看 |
+| --- | --- | --- | --- | --- | --- |
+| NQ1 | Basic / Core / Transfer |  |  | LOx |  |
+
+## 小节自测答案区
+
+### x.x
+
+- 最小自测答案：
+- 自检标准：
+- 常见错误：
+
+## 闭卷检查答案区
+
+### NQ1
+
+- 完整答案：
+- 评分/自检要点：
+- 如果答错，回看：
+
+## 必须闭卷记住
+
+- 
+
+## 理解即可
+
+- 
+
+## 练习映射
+
+| 完成标准 | 对应主动回忆 | 对应练习 | 通过标准 |
 | --- | --- | --- | --- |
-| NQ1 |  |  | LOx |
+|  | `02-active-recall.md` Qx | `03-exercises.md` Ex |  |
+
+## 考前 10 分钟速读
+
+1. 
+2. 
+3. 
 
 ## 最低完成标准
 
@@ -676,7 +770,36 @@ FILES_EN = {
 - Chapter: {title}
 - Source: {source}
 - Page or section range: {chapter}
+- Source map: `source-map.md`
+- Extraction quality / needs verification:
+- File encoding: UTF-8
 - Chapter topic:
+
+## How To Use This Note
+
+- First-pass essentials:
+- Second-pass strengthening:
+- Must know before exercises:
+- Companion active recall: `02-active-recall.md`
+- Companion exercises: `03-exercises.md`
+- Companion code extracts: `07-code-extracts.md`
+- Source verification: `source-map.md`
+
+## Chapter Map
+
+Show the chapter's knowledge structure as a tree, flow, or ASCII sketch. Structural, algorithmic, and conversion-heavy chapters require a diagram or trace.
+
+```text
+
+```
+
+## Layered Study Route
+
+| Layer | Content | Completion check |
+| --- | --- | --- |
+| First pass |  | Can state the core problem and spine |
+| Second pass |  | Can solve core examples and discriminations |
+| Extension / exam focus |  | Can complete transfer or synthesis tasks |
 
 ## Problem This Chapter Solves
 
@@ -695,11 +818,17 @@ Write the chapter's 3-5 most important moves. Do not dump definitions.
 2. 
 3. 
 
-## Key Concepts
+## Key Concept Overview
 
-| Name | Minimal definition | Intuition | Simple concrete example | Easy confusion | Mastery level | Source |
-| --- | --- | --- | --- | --- | --- | --- |
-|  |  | Teacher supplement: | Teacher supplement: |  | explain / distinguish / apply / memorize | [PDF p.x] |
+| Name | Minimal definition | Intuition | Mastery level | Closed-book criterion | Source |
+| --- | --- | --- | --- | --- | --- |
+|  |  | Teacher supplement: | explain / distinguish / apply / memorize |  | [PDF p.x] |
+
+## Key Concept Examples And Boundaries
+
+| Concept | Positive example | Non-example / boundary | Easy confusion | Matching practice |
+| --- | --- | --- | --- | --- |
+|  | Teacher supplement: |  |  | Qx / Ex |
 
 ## Closed-Loop Subsection Notes
 
@@ -710,11 +839,13 @@ Write the chapter's 3-5 most important moves. Do not dump definitions.
 - Source evidence:
 - Intuition:
 - Simple concrete example:
+- Diagram / trace:
 - Mechanism / development:
 - Why this design or idea exists:
 - Boundary / common confusion:
+- Code connection:
 - Minimum self-check:
-- Self-check answer key:
+- Answer location: see final "Subsection Self-Check Answer Key"
 
 ### x.x Subsection title
 
@@ -723,11 +854,13 @@ Write the chapter's 3-5 most important moves. Do not dump definitions.
 - Source evidence:
 - Intuition:
 - Simple concrete example:
+- Diagram / trace:
 - Mechanism / development:
 - Why this design or idea exists:
 - Boundary / common confusion:
+- Code connection:
 - Minimum self-check:
-- Self-check answer key:
+- Answer location: see final "Subsection Self-Check Answer Key"
 
 ## Chapter-Level Distinctions
 
@@ -769,13 +902,68 @@ Write the chapter's 3-5 most important moves. Do not dump definitions.
 | --- | --- | --- | --- | --- |
 |  |  |  |  |  |
 
+## Implementation Bridge And Topic Add-Ons
+
+Use this for C, data structures, algorithms, formulas, or conversion-heavy chapters. Mark irrelevant rows as "not applicable".
+
+| Topic | Code/material location | Representation | Empty/boundary case | Common implementation pitfall |
+| --- | --- | --- | --- | --- |
+|  | `07-code-extracts.md` |  |  |  |
+
+| Topic signal | Present? | Required add-on |
+| --- | --- | --- |
+| Binary tree | yes / no | empty tree, five basic forms, shape diagram, 1-based/0-based numbering |
+| Traversal | yes / no | visit-order template, 6-8 node trace, level-order note, recursive base case |
+| Non-recursive traversal | yes / no | stack-state table, what the stack stores |
+| Threaded binary tree | yes / no | `LTag/RTag` table, pointer/tag rewrite example |
+| Union-find | yes / no | parent array trace, Find before merge, index convention, amortized note |
+| Huffman | yes / no | merge table, WPL, path length, equal weights are non-unique, prefix condition |
+| Backtracking | yes / no | state tree, choose/recurse/undo pseudocode, shared-state undo |
+| Catalan/counting | yes / no | `b0,b1,b2,b3` hand calculation, `b_n`/`C_n`, ordered-tree n-1 offset |
+
 ## Closed-Book Checks
 
-Include 5-8 prompts covering the chapter problem, key flow, key contrasts, easiest trap, and at least one "why this design exists" question.
+Include 5-8 prompts covering the chapter problem, key flow, key contrasts, easiest trap, and at least one "why this design exists" question. Do not put complete answers in the prompt area.
 
-| ID | Prompt | Answer key | Objective |
+| ID | Difficulty | Prompt | Hint | Objective | If wrong, review |
+| --- | --- | --- | --- | --- | --- |
+| NQ1 | Basic / Core / Transfer |  |  | LOx |  |
+
+## Subsection Self-Check Answer Key
+
+### x.x
+
+- Minimum self-check answer:
+- Self-check standard:
+- Common mistake:
+
+## Closed-Book Check Answer Key
+
+### NQ1
+
+- Complete answer:
+- Scoring/self-check points:
+- If wrong, review:
+
+## Must Memorize
+
+- 
+
+## Understand Only
+
+- 
+
+## Practice Mapping
+
+| Completion standard | Active recall | Exercise | Passing standard |
 | --- | --- | --- | --- |
-| NQ1 |  |  | LOx |
+|  | `02-active-recall.md` Qx | `03-exercises.md` Ex |  |
+
+## 10-Minute Review Route
+
+1. 
+2. 
+3. 
 
 ## Minimum Completion Standard
 
