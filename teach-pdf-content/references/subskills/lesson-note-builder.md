@@ -1,109 +1,202 @@
 # Lesson Note Builder Subskill
 
-Use this module before drafting or revising `01-lesson-notes.md`.
+Use this module before drafting or revising `detailed-notes.md`.
 
 ## Purpose
 
-The chapter note must be source-bounded, novice-readable, recall-friendly, and exercise-ready. It should teach the chapter, not merely compress the source.
+`detailed-notes.md` is the chapter's main teaching file.
+
+Its job is not to compress the source. Its job is to teach the chapter so the learner can understand the mechanism without constantly returning to the textbook.
 
 ## Output Mode Default
 
-Choose an output mode before drafting. If the user does not specify a mode, use `beginner_lecture`.
+Choose an output mode before drafting. If the user does not specify one, use `beginner_lecture`.
 
 - `beginner_lecture`: default. Teach the chapter in first-pass order and delay review compression until after the main explanation.
-- `standard_study_pack`: balanced teaching plus review support.
+- `standard_study_pack`: balanced teaching plus practice plus review support.
 - `review_cram`: condensed review-only mode for explicit cram requests.
+
+## Drafting Rule
+
+Do not draft prose directly from textbook headings.
+
+Before writing:
+
+1. extract subsection knowledge points
+2. mark which concepts are new in this subsection
+3. assign `C1-C4` complexity to new concepts
+4. decide teaching depth from complexity
+5. confirm how each subsection maps into `knowledge-map.json`
+
+The note should follow the chapter's knowledge structure, not only the textbook's printing structure.
 
 ## Required Opening
 
-Every full `01-lesson-notes.md` should start with:
+Every full `detailed-notes.md` should open with:
 
 1. title and source range
-2. source-map link, extraction-quality note, and UTF-8 note when files are created on Windows
+2. source-map link and extraction-quality note
 3. output mode and why it was chosen when not obvious
 4. how to use this note
 5. prerequisite reminder
-6. starter example or toy case for the first pass
-7. chapter map or knowledge tree
-8. first-pass / second-pass / extension route
-9. chapter problem and conceptual spine
-10. links to relevant pack files such as `02-active-recall.md`, `03-exercises.md`, `07-code-extracts.md`, and `source-map.md`
+6. chapter problem
+7. chapter knowledge map summary
+8. suggested first-pass / review-pass route
+9. starter example or toy case
+10. conceptual spine
 
-## Key Concept Contract
+## Knowledge-Point Table Rule
 
-For each key concept include:
+Each core subsection should include a small knowledge-point table or equivalent structured list that makes these fields visible:
 
-- minimal definition
-- intuition
-- positive example
-- non-example or boundary
-- common confusion
-- required mastery level
-- closed-book criterion
-- source reference
+- knowledge-point ID
+- title
+- is new concept or not
+- complexity level `C1-C4`
+- importance
+- mastery target
 
-Split wide concept tables when they become hard to read. Prefer two small tables over one seven-column table.
+This is required because the note is both:
+
+- a human teaching document
+- a semantic source for frontend rendering and node jumps
 
 ## Closed-Loop Subsections
 
-Each core subsection should answer:
+Each core subsection should normally answer:
 
 - What question does this subsection answer?
-- What is the short conclusion?
-- What is the source evidence?
-- What is the intuition?
+- What are the main knowledge points here?
 - What is the smallest useful example?
+- What is the formal conclusion or definition?
+- Why does the conclusion hold?
 - What is the mechanism, lifecycle, proof idea, or procedure?
-- Why does this design or idea exist?
-- What boundary or common confusion prevents misuse?
-- What self-check tests the idea?
-- Where is the answer key?
+- What boundary, counterexample, or common confusion prevents misuse?
+- What similar concept must be distinguished?
+- What implementation or problem-type anchor should the learner connect it to?
+- What closed-book retell template should the learner be able to produce?
 
 Do not put complete self-check answers immediately after the question. Use a final answer area or a collapsible answer block.
+
+## Complexity-Driven Teaching Depth
+
+Teach different concepts with different depth.
+
+### `C1`
+
+Needs:
+
+- one-sentence problem
+- one-sentence conclusion
+- one minimum example
+- one boundary reminder
+
+### `C2`
+
+Needs:
+
+- question
+- conclusion
+- minimum example
+- why this definition exists
+- easy confusion
+- closed-book wording
+
+### `C3`
+
+Needs:
+
+- starter example
+- observation
+- formal result
+- why it holds
+- trace
+- boundary or trap
+- nearby-concept comparison
+- implementation or question-type connection
+- closed-book output template
+
+### `C4`
+
+Needs:
+
+- introduction problem
+- minimum counterexample or starter example
+- layered explanation
+- full trace
+- why it holds
+- why simpler alternatives fail
+- multiple nearby-concept comparisons
+- code/formula/diagram bridge
+- closed-book output template
+- compressed review form
 
 ## Example Type Rules
 
 Choose the example format by material type:
 
-- Definition: positive example + non-example.
-- Structure: ASCII diagram + labeled parts.
-- Formula: symbol meanings + minimal calculation + misuse.
-- Algorithm/process: ordered steps + trace table.
-- Code concept: minimal snippet + one implementation pitfall.
-- Conversion rule: before/after diagram.
-- Abstract theory: toy case before general statement.
+- definition: positive example plus non-example
+- structure: ASCII diagram plus labeled parts
+- formula: symbol meanings plus minimal calculation plus misuse
+- algorithm or process: ordered steps plus trace table
+- code concept: minimal snippet plus one implementation pitfall
+- conversion rule: before/after diagram
+- abstract theory: toy case before general statement
 
 For `beginner_lecture`, place the first worked example before large summary tables whenever possible.
+
+## Mandatory Why/Trace Rule
+
+If the subsection belongs to trees, graphs, traversal, recursion, state transitions, formulas, or implementation-heavy mechanisms, it must contain:
+
+- one minimum example
+- one why-it-holds explanation
+- one trace or ordered development
+- one confusion boundary
+
+If one of these is missing, the subsection is unfinished.
 
 ## Beginner Readability Rules
 
 - Introduce prerequisites before using dependent terms.
 - In `beginner_lecture`, do not open with a review checklist, a large concept table, or mastery standards before the learner sees the first concrete example.
 - Mark what must be memorized, what must be understood, and what must be practiced.
-- Add difficulty labels when a chapter mixes basic and advanced content.
 - Do not let a large table replace explanation.
 - Use short paragraphs and local examples before broad summaries.
-- Include a "10-minute review route" for dense chapters.
-- Add an objective/practice mapping so learners can prove each completion standard.
-- Keep source-evidence labels consistent; do not mix unlabeled source facts and teacher supplements.
-- If a page range is broad, identify the exact page or subsection for core definitions when possible.
+- Include a `10-minute review route` for dense chapters.
+- Add stable section names such as:
+  - `本节主问题`
+  - `本节知识点`
+  - `先看一个最小例子`
+  - `正式结论 / 定义`
+  - `为什么成立`
+  - `过程追踪 / Trace`
+  - `边界、反例与易错点`
+  - `和相邻概念的区别`
+  - `代码 / 实现 / 题型连接`
+  - `本节闭卷输出模板`
+
+These stable names exist for both learners and frontend rendering.
 
 ## Required Closing Sections
 
 For full notes, close with:
 
-- `必须闭卷记住` / `Must Memorize`: exact definitions, formulas, ordered steps, and canonical contrasts.
-- `理解即可`: ideas that should be explainable but not memorized word-for-word.
-- `练习映射`: minimum completion standards mapped to recall/exercise IDs.
-- `考前 10 分钟速读`: a short route through the most important definitions, diagrams, formulas, and traps.
-- separated self-check and closed-book answer areas.
+- `关键术语与公式速查`
+- `实现与代码连接`
+- `易混概念总对比`
+- `闭卷输出模板`
+- `10 分钟速读路线`
+
+If the chapter is implementation-heavy, explicitly point to code locations or code IDs.
 
 ## Output Check
 
 Before considering the note complete, verify that a learner can:
 
-1. explain the chapter problem,
-2. draw or trace the core structures/processes,
-3. do one worked example per hard concept, with the first hard concept introduced through an example instead of a table dump,
-4. distinguish the main confusions,
-5. find the matching recall/exercise/code file.
+1. explain the chapter problem
+2. trace the core structures or processes
+3. explain why the hard conclusions hold
+4. distinguish the main confusions
+5. find the matching practice and review locations
+6. retell the chapter's core points without immediately reopening the source

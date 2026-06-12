@@ -1,6 +1,20 @@
 # Chapter Output Standard
 
-Use this reference when generating chapter notes, auditing user notes, deciding mastery depth, or creating memory cards. It merges the former chapter-note and chapter-memory-card workflows into the main `teach-pdf-content` process.
+Use this reference when generating, auditing, or revising a chapter pack for `teach-pdf-content`.
+
+The default standard is the vNext learner-facing three-file model:
+
+- `detailed-notes.md`
+- `practice.md`
+- `review-notes.md`
+
+Support files:
+
+- `knowledge-map.json`
+- `source-map.md`
+- `_meta.json`
+
+Legacy multi-file packs remain compatible, but they are no longer the preferred learner-facing format.
 
 ## Chapter Management
 
@@ -12,256 +26,235 @@ Default layout:
 lessons/<source-id>/
 |-- chapter-index.md
 `-- chapters/
-    |-- 01-<chapter-slug>/
-    |   |-- 00-learning-path.md
-    |   |-- 01-lesson-notes.md
-    |   |-- 02-active-recall.md
-    |   |-- 03-exercises.md
-    |   |-- 04-glossary.md
-    |   |-- 05-review-plan.md
-    |   |-- 06-memory-cards.md
-    |   `-- source-map.md
-    `-- 02-<chapter-slug>/
+    `-- <chapter-id>/
+        |-- detailed-notes.md
+        |-- practice.md
+        |-- review-notes.md
+        |-- knowledge-map.json
+        |-- source-map.md
+        `-- _meta.json
 ```
 
-If the requested range contains more than one chapter or would create a very large note, first create or update `chapter-index.md` with chapter boundaries, source ranges, status, and the recommended generation order. Then generate one chapter pack at a time.
+If the requested range contains more than one chapter or would create a very large note, first create or update `chapter-index.md` with chapter boundaries, source ranges, status, and recommended generation order. Then generate one chapter pack at a time.
 
 ## Output Mode Selection
 
 Choose one of these modes before drafting:
 
 - `beginner_lecture`: default mode. Use when learner level is unknown or when the user asks to be taught. Prioritize first-pass comprehension over compression.
-- `standard_study_pack`: balanced mode for learners who already have first exposure and want a full pack with teaching plus recall support.
+- `standard_study_pack`: balanced mode for learners who already had first exposure and want a full pack with teaching plus recall plus review support.
 - `review_cram`: condensed mode for explicit review or exam-sprint requests. Use only when the user asks for compression.
 
-If the user does not specify a mode, default to `beginner_lecture`. Do not silently choose a balanced review style.
+If the user does not specify a mode, default to `beginner_lecture`.
 
-## Chapter Note Contract
+## Knowledge-Point-First Rule
 
-A real chapter note must be source-bounded, novice-readable, recall-friendly, and strict enough for later closed-book review. In the default mode, it must also read like a lecture note for a first-time learner instead of a compressed review sheet.
+Before drafting prose, build the chapter knowledge model.
 
-Before writing or rewriting notes:
+For each chapter:
 
-1. Confirm the source range.
-2. Read the user's existing note if provided.
-3. Audit coverage, source traceability, conceptual structure, beginner readability, recall value, and error risk.
-4. If a user note is empty or nearly empty, state that no content comparison is possible and switch to a gap comparison.
+1. identify core concepts
+2. identify prerequisites
+3. identify procedures, algorithms, formulas, and implementation anchors
+4. mark which concepts are newly introduced in each subsection
+5. assign complexity levels `C1-C4` to new concepts
+6. decide teaching depth from complexity rather than from textbook heading size
+7. create `knowledge-map.json` before finalizing learner-facing files
 
-Every full chapter note must contain:
+Do not simply mirror textbook headings if doing so hurts learning clarity.
+
+## `detailed-notes.md` Contract
+
+`detailed-notes.md` is the main teaching artifact.
+
+It must read like a chapter handout that can teach the learner directly, not like a compressed review sheet or a definition dump.
+
+Every full `detailed-notes.md` must contain:
 
 1. chapter title and source range
-2. source-map link, source range, extraction-quality note, and encoding note when relevant
-3. how to use this note and which companion files to open
-4. output mode note when relevant, especially when using the default `beginner_lecture`
-5. prerequisite signal before dependent terms appear
-6. chapter problem: what problem this chapter solves and why it matters
-7. starter worked example or toy case before dense definition tables or the first hard subsection
-8. chapter map or knowledge tree for dense chapters
-9. first-pass, second-pass, and extension route when the chapter mixes difficulty levels
-10. conceptual spine in 3-5 lines
-11. key concepts with definition, intuition, one simple concrete example, easy confusion, non-example or boundary, and source
-12. core subsection notes with closed loops
-13. mechanisms, lifecycle steps, or argument flow in order
-14. important distinctions and boundary cases
-15. common mistakes or traps with correction actions
-16. closed-book checks with separated answer keys
-17. minimum mastery standard
-18. must-memorize vs understand-only split
-19. practice mapping from mastery standards to recall/exercise IDs
-20. 10-minute review route for dense chapters
+2. source-map link, extraction-quality note, and encoding note when relevant
+3. chapter problem: what this chapter solves and why it matters
+4. prerequisite signal before dependent terms appear
+5. chapter knowledge map near the top
+6. suggested learning path for first pass and review pass
+7. starter example or toy case before the first hard subsection
+8. conceptual spine in 3-5 lines
+9. core subsection notes with teaching closed loops
+10. important distinctions and boundary cases
+11. implementation or code bridge when relevant
+12. closed-book output templates
+13. 10-minute review route
+
+Each core subsection should normally include:
+
+- `本节主问题` / subsection question
+- `本节知识点` / subsection knowledge-point table
+- `先看一个最小例子`
+- `正式结论 / 定义`
+- `为什么成立`
+- `过程追踪 / Trace`
+- `边界、反例与易错点`
+- `和相邻概念的区别`
+- `代码 / 实现 / 题型连接`
+- `本节闭卷输出模板`
+
+If the subsection belongs to trees, graphs, traversal, recursion, state transitions, formulas, or implementation-heavy content, it is incomplete without:
+
+- one minimum example
+- one why-it-holds explanation
+- one trace or ordered development
+- one confusion boundary
+
+## `practice.md` Contract
+
+`practice.md` converts understanding into output ability.
+
+It should contain:
+
+1. how to use this practice file
+2. knowledge-point-to-question mapping
+3. closed-book explanation questions
+4. discrimination questions
+5. process-trace questions
+6. basic exercises
+7. core exercises
+8. transfer exercises
+9. common-error diagnosis
+10. complete answers and scoring
+
+Every question should state:
+
+- question ID
+- knowledge-point ID(s)
+- type
+- difficulty
+- target mastery
+- prompt
+- hint
+
+Prompt sections must stay answer-free except for hints. Complete answers belong in the final answer section.
+
+## `review-notes.md` Contract
+
+`review-notes.md` is not a shorter copy of `detailed-notes.md`.
+
+It should reorganize the chapter for high-density recall and quick reactivation.
+
+It should contain:
+
+1. 3-minute recall route
+2. 10-minute review route
+3. must-memorize definitions, rules, and contrasts
+4. high-value traps
+5. concept comparison quick reference
+6. oral retell templates
+7. memory-card section
+8. wrong-answer recovery rules
+9. spaced review plan
+
+## `knowledge-map.json` Contract
+
+`knowledge-map.json` is the chapter's internal knowledge model and frontend navigation source.
+
+Minimum requirements:
+
+- top-level metadata
+- `nodes`
+- `edges`
+- `recommended_paths`
+- node IDs that map back to:
+  - `detailed-notes.md`
+  - `practice.md`
+  - `review-notes.md`
+
+The knowledge map is not decorative. It should support:
+
+- chapter first-screen knowledge graph
+- node-based reading navigation
+- node-to-practice mapping
+- node-to-review mapping
+- study-mode and review-mode highlighting
 
 ## Novice Learnability Contract
 
-A note that is structurally complete can still be too rough for a beginner. For full chapter notes, add the missing representation before finalizing:
+A structurally complete note can still fail beginners.
 
-- Default to `beginner_lecture` unless the user explicitly asks for a more compressed mode.
-- Prerequisites must appear before dependent terms are used casually.
-- In `beginner_lecture`, the first worked example should appear before the main concept summary table or no later than the first hard subsection.
-- Dense or branching chapters need a chapter map near the top.
-- Structural concepts need a diagram, ASCII sketch, or labeled table.
-- Procedures, algorithms, conversions, and formulas need a worked step-by-step example.
-- Programming-heavy chapters need a code bridge: data layout, snippet reference, empty/null case, and implementation pitfall.
-- Key concepts need a non-example or boundary when confusion is likely.
-- The reader must be able to tell what to memorize, what to understand, and what to practice.
-- Self-check answers must not sit immediately after the question unless hidden in a collapsible answer block.
+Before finalizing a chapter pack:
 
-## Subsection Closed Loop
-
-For each core subsection, write a closed loop instead of a loose explanation:
-
-```markdown
-### x.x Subsection title
-
-- Question this subsection answers:
-- Short conclusion:
-- Source evidence:
-- Intuition:
-- Simple concrete example:
-- Mechanism / development:
-- Why this design or idea exists:
-- Boundary / common confusion:
-- Minimum self-check:
-- Answer location:
-```
-
-A hard subsection is incomplete if it only has a definition, a flow without purpose, a conclusion without mechanism, or a mechanism without boundary. At least one of these must appear: why the mechanism exists, what problem it prevents, what similar concept it differs from, or what error a beginner is likely to make.
-
-Put complete subsection self-check answers in a final `## 小节自测答案区` / `## Subsection Self-Check Answer Key` section, or hide them in `<details>` blocks. Do not train the learner to read the answer before attempting recall.
-
-## Knowledge Mastery Contract
-
-For each key knowledge point, specify the required mastery depth. Avoid vague labels such as "understand" unless the expected performance is observable.
-
-Use these levels:
-
-- `Recognize`: identify the concept, symbol, state, or claim when seen.
-- `Explain`: explain the idea in plain language and precise terms.
-- `Distinguish`: separate it from a similar concept, boundary case, or common trap.
-- `Sequence`: retell ordered steps, lifecycle, proof outline, or argument flow.
-- `Apply`: use the idea in a new exercise, scenario, calculation, diagnosis, or implementation.
-- `Memorize`: reproduce exact names, conditions, short definitions, ordered states, or canonical contrasts.
-- `Diagnose`: identify why a proposed answer, interpretation, or solution is wrong.
-
-Every learning objective or key concept should state the mastery level, closed-book criterion, assessment item, and source reference.
+- prerequisites must appear before dependent terms are used casually
+- the first worked example should appear before dense definition tables
+- dense or branching chapters need a chapter map near the top
+- structural topics need a diagram, ASCII sketch, or labeled table
+- procedures, algorithms, conversions, and formulas need a worked step-by-step example
+- programming-heavy chapters need a code bridge
+- key concepts need a non-example or boundary when confusion is likely
+- the learner must be able to tell what to memorize, what to understand, and what to practice
 
 ## Answer-Key Placement
 
-For recall questions and exercises, keep the prompt section answer-free. The prompt section may contain a short hint, source range, or relevant objective, but it must not include the complete answer.
+For `practice.md`, keep prompt sections answer-free except for short hints.
 
-Put complete answers at the end of the file in a dedicated answer-key section:
+Put complete answers at the end in:
 
-- For `02-active-recall.md`, use `## 答案区` or `## Answer Key`.
-- For `03-exercises.md`, use `## 完整答案与评分标准` or `## Complete Answers and Scoring`.
+- `## 完整答案与评分点`
+- or `## Complete Answers and Scoring`
 
-Every answer key must include enough content for self-study:
+Each answer should include:
 
-- the complete expected answer, not only a source citation
+- complete expected answer
 - scoring or self-check points
 - common wrong answer or trap
-- complete code when the question asks for code
 - source basis or teacher-designed note
 
-Do not write "see source" as the answer. Source references support the answer; they do not replace it.
+Do not write `see source` as the answer.
 
-## Concrete Examples
+## Concrete Example Rule
 
-Every key knowledge point in `01-lesson-notes.md` needs a simple concrete example. Prefer examples that are small enough to understand in one pass:
+Every key knowledge point in `detailed-notes.md` needs a simple concrete example.
 
-- For definitions: give one positive example and, when useful, one non-example.
-- For processes: give a tiny ordered scenario.
-- For formulas: give a minimal calculation with symbols explained.
-- For code/API concepts: give a short runnable or copyable snippet when possible.
-- For abstract theory: give a toy case before any complex case.
-- For structures: give a labeled diagram or ASCII sketch.
-- For conversions: give before/after representation and one trace step.
-- For algorithms: give a trace table on a tiny input.
+Prefer examples that are small enough to understand in one pass:
 
-Mark examples as source-backed when they come from the source. Mark teacher-created examples as teacher supplements.
-
-## Code Extraction
-
-When the source contains code, especially scanned/OCR code, create `07-code-extracts.md` so the learner can read and copy code separately from prose notes.
-
-For each snippet, include:
-
-- source location: PDF page, book page, section, or figure/listing number
-- language if known
-- OCR reliability: high, medium, low, or needs manual verification
-- cleaned copyable code block
-- notes on uncertain tokens, missing indentation, wrapped lines, or source formatting
-- short explanation of what the snippet demonstrates
-
-Never silently "fix" uncertain scanned code. Use `待核对` / `Needs verification` for ambiguous identifiers, operators, punctuation, indentation, or line breaks.
-
-## Study Time Table
-
-Every chapter pack must include a per-chapter study time table in `00-learning-path.md`. The table should map study blocks to source sections, objectives, tasks, minutes, and completion checks.
-
-Use realistic, bounded blocks:
-
-- first pass reading
-- core concept explanation
-- closed-book recall
-- exercises or code practice
-- memory cards and review
-
-If the learner gives a deadline or available time, fit the table to that constraint. If not, provide a standard plan plus a compressed plan.
-
-## Memory Card Selection
-
-Memory cards are part of the full study-pack workflow, not a separate skill. Create `06-memory-cards.md` only after the chapter note and learning objectives are clear.
-
-Do not card everything. Make cards only for high retrieval value items:
-
-- exact definitions the course expects the learner to reproduce
-- state names and meanings
-- lifecycle or process steps
-- API/function roles only when they are core checkpoints
-- direct contrasts a teacher could ask
-- stable, short "why this design exists" answers
-- canonical traps that repeatedly cause wrong answers
-
-Skip items better learned by understanding than memorization:
-
-- long prose explanations
-- broad motivation text with no stable answer
-- implementation trivia with no review value
-- full examples that only illustrate the mood of a rule
-
-## Card Rules
-
-Every card must obey these rules:
-
-1. One card tests one target fact, distinction, sequence, or trap.
-2. The front side asks one thing only.
-3. The back side fits in 1-4 bullets or one short paragraph.
-4. If the card depends on contrast, the contrast appears in the prompt.
-5. If the card tests sequence, the answer is ordered.
-6. If the card needs "and also", split it.
-
-Preferred card types:
-
-- definition
-- distinction
-- sequence
-- condition -> result
-- misconception repair
-- cloze, only for exact names, flags, or ordered terms
-
-Group cards into `Core`, `Secondary`, and `Trap`. Add a 3-minute oral review at the end with 5-10 speakable bullets.
+- definitions: positive example plus non-example when useful
+- processes: tiny ordered scenario
+- formulas: minimal calculation with symbols explained
+- structures: labeled diagram or ASCII sketch
+- algorithms: trace table on a tiny input
 
 ## Quality Checklist
 
-Rewrite or continue the note if any failure sign appears:
+Rewrite or continue the pack if any failure sign appears:
 
-- The output is mostly a definition dump.
-- The note reads like a review sheet before it teaches the first concrete example.
-- The chapter problem is missing.
-- The conceptual spine is not visible early.
-- Key concepts have definitions but no simple concrete examples.
-- The reader cannot tell sequence, causality, or boundaries.
-- Questions contain full answers inline instead of keeping answers in the final answer key.
-- Answers are source citations only and do not include complete explanations or code.
-- Scanned/OCR code is mixed into prose notes instead of being cleaned into `07-code-extracts.md`.
-- The chapter has no study time table.
-- Names of functions, states, variables, or theories appear without their role.
-- A subsection explains "what" but never closes the loop on "why", "how", or "how to check".
-- Review questions have no answer keys.
-- The learner cannot tell what must be memorized versus what only needs understanding.
-- The generated Markdown is so large that it is hard to open or review.
+- the output is mostly a definition dump
+- the chapter problem is missing
+- the knowledge-point structure is invisible
+- the note follows textbook headings mechanically without exposing the chapter's conceptual spine
+- a subsection states a result but never explains why it holds
+- a graph/tree/algorithm subsection has no trace
+- key concepts have definitions but no simple concrete examples
+- answers are source citations only and do not include real explanations
+- review notes are just compressed prose instead of recall-oriented structure
+- the learner cannot tell what must be memorized versus what only needs understanding
 
 ## Rough Note Anti-Patterns
 
-These patterns are especially likely to produce notes that look complete but do not teach well:
+These patterns often produce notes that look complete but do not actually teach:
 
-- A big table replaces explanation.
-- Definitions appear before the learner knows why they matter.
-- Review or checklist sections appear before the first real example in the default mode.
-- Examples are too small to train the target skill.
-- A formula is stated but never used.
-- An algorithm is described but never traced.
-- A structure is described without a diagram or representation.
-- Code exists in `07-code-extracts.md` but `01-lesson-notes.md` never points to it.
-- Common mistakes are listed without correction actions.
-- Source citations are present but the learning path is unclear.
-- The note gives the self-check answer before the learner has a chance to recall.
+- a big table replaces explanation
+- definitions appear before the learner knows why they matter
+- review content appears before the first real example in default mode
+- examples are too small to train the target skill
+- the note gives a conclusion, intuition, and citation, but the learner still has to return to the source for the mechanism
+- a formula is stated but never used
+- an algorithm is described but never traced
+- a structure is described without a diagram
+- common mistakes are listed without correction actions
+
+## Legacy Compatibility
+
+Legacy chapter packs remain supported for existing content, migration comparison, or explicit user requests.
+
+When working in legacy mode:
+
+- treat it as compatibility mode
+- make clear that it is not the preferred learner-facing output
+- prefer migration toward the vNext three-file model whenever possible

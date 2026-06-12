@@ -4,15 +4,19 @@ Use this module before finalizing a study pack, when auditing an existing note, 
 
 ## Completion Standard
 
-A full chapter pack is not complete merely because all files exist. It must be:
+A chapter pack is not complete merely because files exist.
+
+A vNext pack must be:
 
 - source-grounded
 - novice-readable
-- lecture-first by default unless the user explicitly asked for a compressed review mode
+- teaching-first by default unless the user explicitly asked for compressed review mode
+- knowledge-point-organized
 - practice-connected
-- code-connected when relevant
 - reviewable without opening the source every minute
-- checked by `scripts/check_lesson_pack.py`
+- checked by `scripts/check_lesson_pack_vnext.py`
+
+Legacy packs may still be checked by `scripts/check_lesson_pack.py`.
 
 ## P0 Roughness Failures
 
@@ -20,43 +24,47 @@ Revise before final if any P0 failure appears:
 
 - no source range or source-map evidence
 - no chapter problem or conceptual spine
-- no chapter map or first-pass route for a dense chapter
+- no chapter knowledge map or recommended route for a dense chapter
 - default-mode note has no prerequisite reminder or starter example
-- in default mode, closed-book or checklist sections arrive before the note teaches the first concrete example
-- structural topics lack diagram/ASCII sketch
+- in default mode, review or checklist content arrives before the first real example
+- structural topics lack diagram or ASCII sketch
 - processes, algorithms, or formulas lack a worked example or trace
+- a subsection gives a conclusion but does not explain why it holds
+- a graph/tree/recursion/algorithm subsection lacks a minimum example, a trace, or a confusion boundary
 - key concepts lack examples, non-examples, or boundaries
-- programming/data-structure chapters lack code links or implementation notes
-- self-check answers sit immediately after the questions
+- practice prompts leak full answers
+- review notes are just compressed prose instead of recall-oriented structure
 - wide tables replace explanation
-- common mistakes lack correction actions
 - the learner cannot tell what to memorize, understand, or practice
+- the learner still has to return to the source for the actual mechanism
 
 ## P1 Improvement Warnings
 
 Fix when time allows:
 
 - missing 10-minute review route
-- no objective-to-exercise mapping in the note
+- no knowledge-point-to-question mapping
 - source page ranges are too broad for key definitions
 - teacher supplements are not labeled consistently
-- no difficulty labels for mixed easy/hard material
 - no wrong-answer recovery path
+- no oral retell templates for dense conceptual clusters
 
 ## Audit Procedure
 
-1. Read `01-lesson-notes.md` from the top as a first-time learner.
-2. Mark missing prerequisite bridges, starter examples, diagrams, worked examples, trace tables, non-examples, and code links.
-3. Check `02-active-recall.md` and `03-exercises.md` have final answer keys.
-4. Check `07-code-extracts.md` exists when source/code demands it.
-5. Run `scripts/check_lesson_pack.py <study-pack-dir>`.
-6. Fix P0 issues before telling the user the pack is complete.
+1. Read `detailed-notes.md` from the top as a first-time learner.
+2. Mark missing prerequisite bridges, starter examples, diagrams, worked examples, why-it-holds explanations, traces, boundaries, and retell templates.
+3. Check `practice.md` keeps prompts answer-free and includes a final answer section.
+4. Check `review-notes.md` includes a 3-minute route, a 10-minute route, and wrong-answer recovery guidance.
+5. Check `knowledge-map.json` exists and its node IDs map back into the learner-facing files.
+6. Run `scripts/check_lesson_pack_vnext.py <study-pack-dir>`.
+7. Fix P0 issues before telling the user the pack is complete.
 
 ## Reporting
 
 When closing the task, report:
 
 - files created or changed
+- whether the pack is vNext or legacy
 - checker result
 - warnings intentionally left, if any
 - file the learner should open first
