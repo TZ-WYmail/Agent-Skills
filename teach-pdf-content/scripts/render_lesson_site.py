@@ -634,6 +634,203 @@ def render_knowledge_pages(chapter: Chapter) -> str:
     """
 
 
+def render_text_list(items: list[str], empty: str = "") -> str:
+    normalized = [str(item).strip() for item in items if str(item).strip()]
+    if not normalized:
+        return f"<p>{inline_markdown(empty)}</p>" if empty else ""
+    return "<ul>" + "".join(f"<li>{inline_markdown(item)}</li>" for item in normalized) + "</ul>"
+
+
+def page_meta_badges(page: dict) -> list[str]:
+    badges: list[str] = []
+    for key in ("complexity_level", "importance_level", "teaching_profile", "clarity_risk"):
+        value = str(page.get(key) or "").strip()
+        if value:
+            badges.append(f'<span class="meta-badge">{escape(value)}</span>')
+    minutes = page.get("estimated_teaching_minutes")
+    if minutes:
+        badges.append(f'<span class="meta-badge">{escape(str(minutes))} min</span>')
+    return badges
+
+
+def render_teaching_contract(page: dict) -> str:
+    sections = [
+        ("Must Answer", [str(item) for item in page.get("must_answer", []) if str(item).strip()]),
+        ("Exit Outcomes", [str(item) for item in page.get("exit_outcomes", []) if str(item).strip()]),
+        ("Failure Signals", [str(item) for item in page.get("failure_signals", []) if str(item).strip()]),
+        ("Prerequisites", [str(item) for item in page.get("prerequisites", []) if str(item).strip()]),
+        ("Source Refs", [str(item) for item in page.get("source_refs", []) if str(item).strip()]),
+    ]
+    cards: list[str] = []
+    for title, items in sections:
+        if not items:
+            continue
+        cards.append(
+            f"""
+            <article class="mini-card">
+              <span class="eyebrow">Teaching Contract</span>
+              <h3>{escape(title)}</h3>
+              {render_text_list(items)}
+            </article>
+            """
+        )
+    if not cards:
+        return ""
+    return f'<div class="mini-card-grid kp-contract-grid">{"".join(cards)}</div>'
+
+
+def render_page_summary_chips(page: dict) -> str:
+    items = [
+        ("Page Kind", str(page.get("page_kind") or "").strip()),
+        ("Profile", str(page.get("teaching_profile") or "").strip()),
+        ("Risk", str(page.get("clarity_risk") or "").strip()),
+    ]
+    chips = [
+        f'<span class="meta-badge">{escape(label)}: {escape(value)}</span>'
+        for label, value in items
+        if value
+    ]
+    if not chips:
+        return ""
+    return f'<div class="meta-badge-row">{"".join(chips)}</div>'
+
+
+def render_knowledge_pages(chapter: Chapter) -> str:
+    if not chapter.knowledge_pages_path:
+        return ""
+    try:
+        data = load_json(chapter.knowledge_pages_path)
+    except json.JSONDecodeError:
+        return ""
+
+    pages = [page for page in data.get("pages", []) if isinstance(page, dict)]
+    if not pages:
+        return ""
+
+    nav_cards: list[str] = []
+    article_cards: list[str] = []
+    total_pages = len(pages)
+
+    for index, page in enumerate(pages):
+        page_id = str(page.get("page_id") or f"page-{index + 1}")
+        title = str(page.get("title") or page_id)
+        summary = str(page.get("page_summary") or page.get("entry_question") or "").strip()
+        badges = page_meta_badges(page)
+        chip_row = render_page_summary_chips(page)
+        contract_html = render_teaching_contract(page)
+
+        nav_cards.append(
+            f"""
+            <button class="kp-nav-card" type="button" data-kp-target="{escape(page_id)}" aria-pressed="{str(index == 0).lower()}" data-kp-index="{index}">
+              <span>{index + 1:02d}</span>
+              <strong>{escape(title)}</strong>
+              <small>{inline_markdown(summary or "Open this knowledge page")}</small>
+            </button>
+            """
+        )
+
+        block_cards: list[str] = []
+        for block in page.get("blocks", []):
+            if not isinstance(block, dict):
+                continue
+            block_type = str(block.get("type") or "")
+            block_title = str(block.get("title") or render_block_badge(block_type))
+            block_html = render_page_block_content(block.get("content"))
+            if not block_html:
+                continue
+            block_cards.append(
+                f"""
+                <article class="kp-block kp-block-{escape(block_type or 'content')}" data-block-type="{escape(block_type)}">
+                  <div class="kp-block-head">
+                    <span class="kp-block-badge">{escape(render_block_badge(block_type))}</span>
+                    <h3>{escape(block_title)}</h3>
+                  </div>
+                  <div class="markdown-body">{block_html}</div>
+                </article>
+                """
+            )
+
+        practice_refs = [str(item) for item in page.get("practice_refs", []) if str(item).strip()]
+        review_refs = [str(item) for item in page.get("review_refs", []) if str(item).strip()]
+        practice_html = ""
+        if practice_refs:
+            practice_html = (
+                '<div class="kp-ref-row"><span class="eyebrow">Practice Links</span><p>'
+                + " / ".join(escape(item) for item in practice_refs)
+                + "</p></div>"
+            )
+        review_html = ""
+        if review_refs:
+            review_html = (
+                '<div class="kp-ref-row"><span class="eyebrow">Review Links</span><p>'
+                + " / ".join(escape(item) for item in review_refs)
+                + "</p></div>"
+            )
+
+        article_cards.append(
+            f"""
+            <article class="kp-page" id="kp-{escape(page_id)}" data-kp-page="{escape(page_id)}" data-active="{str(index == 0).lower()}" data-kp-index="{index}">
+              <header class="kp-page-head">
+                <div>
+                  <span class="eyebrow">Knowledge Page {index + 1:02d} / {total_pages:02d}</span>
+                  <h2>{escape(title)}</h2>
+                </div>
+                <div class="meta-badge-row">
+                  {''.join(badges)}
+                </div>
+              </header>
+              {chip_row}
+              <div class="focus-callout">
+                <span class="eyebrow">Entry Question</span>
+                <p>{inline_markdown(str(page.get("entry_question") or summary or title))}</p>
+              </div>
+              <div class="kp-page-goal">
+                <div class="kp-ref-row">
+                  <span class="eyebrow">Learning Goal</span>
+                  <p>{inline_markdown(str(page.get("learning_goal") or summary or title))}</p>
+                </div>
+                {practice_html}
+                {review_html}
+              </div>
+              {contract_html}
+              <div class="kp-block-grid">
+                {''.join(block_cards)}
+              </div>
+            </article>
+            """
+        )
+
+    return f"""
+    <section class="knowledge-pages-board" id="knowledge-pages" data-kp-root>
+      <div class="section-topline">
+        <span class="eyebrow">Knowledge Pages</span>
+        <h2>Read one knowledge point at a time instead of scrolling through the whole chapter</h2>
+      </div>
+      <div class="knowledge-pages-shell">
+        <aside class="kp-nav">
+          <div class="kp-nav-head">
+            <span class="eyebrow">Quick Flip</span>
+            <p>Each page is a standalone knowledge point. Start from the entry question, then unfold the full explanation.</p>
+          </div>
+          <div class="kp-nav-list">
+            {''.join(nav_cards)}
+          </div>
+        </aside>
+        <div class="kp-stage">
+          <div class="kp-toolbar">
+            <button class="inline-tool" type="button" data-kp-move="prev">Previous</button>
+            <button class="inline-tool" type="button" data-kp-move="next">Next</button>
+            <span class="meta-badge" data-kp-progress>1 / {total_pages}</span>
+          </div>
+          <div class="kp-page-stack">
+            {''.join(article_cards)}
+          </div>
+        </div>
+      </div>
+    </section>
+    """
+
+
 def split_markdown_sections(text: str) -> list[tuple[int, str, str]]:
     sections: list[tuple[int, str, str]] = []
     current_level = 0
@@ -1817,6 +2014,21 @@ code, pre {
   display: flex;
   gap: 0.55rem;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+.kp-contract-grid {
+  margin-bottom: 0.95rem;
+}
+.kp-progress {
+  white-space: nowrap;
+}
+.kp-page[data-mode="review"] .kp-block[data-block-type="minimum_example"],
+.kp-page[data-mode="review"] .kp-block[data-block-type="formal_statement"],
+.kp-page[data-mode="review"] .kp-block[data-block-type="implementation_bridge"],
+.kp-page[data-mode="review"] .kp-block[data-block-type="trace"],
+.kp-page[data-mode="review"] .kp-block[data-block-type="why_it_holds"] {
+  display: none;
 }
 .kp-page {
   display: none;
@@ -2463,6 +2675,13 @@ function applyMode(mode) {
   if (visibleTabs[0]) {
     activate(visibleTabs[0].dataset.stageTarget);
   }
+
+  const kpRoot = document.querySelector('[data-kp-root]');
+  if (kpRoot) {
+    kpRoot.querySelectorAll('[data-kp-page]').forEach((page) => {
+      page.dataset.mode = mode;
+    });
+  }
 }
 
 tabs.forEach((tab) => {
@@ -2507,7 +2726,14 @@ const kpRoot = document.querySelector('[data-kp-root]');
 if (kpRoot) {
   const kpButtons = Array.from(kpRoot.querySelectorAll('[data-kp-target]'));
   const kpPages = Array.from(kpRoot.querySelectorAll('[data-kp-page]'));
+  const kpProgress = kpRoot.querySelector('[data-kp-progress]');
   let kpIndex = Math.max(0, kpPages.findIndex((page) => page.dataset.active === 'true'));
+
+  function applyKnowledgePageMode(mode) {
+    kpPages.forEach((page) => {
+      page.dataset.mode = mode;
+    });
+  }
 
   function activateKnowledgePage(index) {
     if (!kpPages.length) return;
@@ -2522,6 +2748,9 @@ if (kpRoot) {
     kpButtons.forEach((button, current) => {
       button.setAttribute('aria-pressed', String(current === kpIndex));
     });
+    if (kpProgress) {
+      kpProgress.textContent = `${kpIndex + 1} / ${kpPages.length}`;
+    }
   }
 
   kpButtons.forEach((button, index) => {
@@ -2538,6 +2767,7 @@ if (kpRoot) {
     });
   });
 
+  applyKnowledgePageMode(currentMode);
   activateKnowledgePage(kpIndex);
 }
 """
