@@ -142,6 +142,7 @@ Use:
      - must-teach why-it-holds segment
      - likely confusion to eliminate
      - expected closed-book output
+   - Prefer storing that planning layer explicitly as `page_brief` inside each knowledge page so the chapter can be refreshed, audited, and later parallelized from page plans rather than from finished prose.
    - Draft each knowledge page in two stages:
      - stage 1: define the teaching contract (`page_kind`, `teaching_profile`, `clarity_risk`, `must_answer`, `exit_outcomes`, `failure_signals`)
      - stage 2: write blocks that actually answer that contract
@@ -160,6 +161,7 @@ Use:
    - For a one-command refresh pass on an existing chapter, use `scripts/refresh_chapter_pack.py <chapter-dir>`.
    - `scripts/refresh_chapter_pack.py` is page-first by default: it reuses existing `knowledge-pages.json` and does not rebuild pages from `detailed-notes.md` unless you explicitly pass `--rebuild-pages`.
    - For targeted page repair on an existing chapter, use `scripts/refresh_chapter_pack.py <chapter-dir> --page-id <knowledge-point-id>`. This should be the default move when only a few knowledge pages are weak.
+   - For existing chapters that predate `page_brief`, run `scripts/ensure_page_briefs.py <chapter-dir>` before deeper refresh or page-level revision.
    - Keep long material in Markdown files rather than terminal output.
    - Organize learner-facing output by learning stage:
      - `detailed-notes.md`: teach and explain

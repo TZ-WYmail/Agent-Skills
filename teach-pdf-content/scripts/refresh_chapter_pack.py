@@ -151,9 +151,24 @@ def main() -> int:
 
     checker_command = [sys.executable, str(script_path("check_lesson_pack_vnext.py")), str(chapter_dir), "--json"]
     repair_command = [sys.executable, str(script_path("repair_knowledge_pages.py")), str(chapter_dir), "--json"]
+    brief_command = [sys.executable, str(script_path("ensure_page_briefs.py")), str(chapter_dir), "--json"]
     for page_id in selected_page_ids:
         checker_command.extend(["--page-id", page_id])
         repair_command.extend(["--page-id", page_id])
+        brief_command.extend(["--page-id", page_id])
+
+    brief_result, _brief_payload = run_json_step(
+        summary,
+        "ensure_page_briefs",
+        brief_command,
+        cwd,
+    )
+    if brief_result.returncode != 0:
+        if args.json:
+            safe_print_json(summary)
+        else:
+            print(brief_result.stderr, file=sys.stderr)
+        return brief_result.returncode
 
     if not args.skip_compile:
         result, _payload = run_json_step(

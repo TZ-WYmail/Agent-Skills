@@ -561,6 +561,14 @@ def build_knowledge_pages(values: dict[str, str]) -> dict[str, object]:
                 "learning_goal": "",
                 "entry_question": "",
                 "page_summary": "",
+                "page_brief": {
+                    "learner_doubt": "",
+                    "best_entry_point": "",
+                    "minimum_example_hint": "",
+                    "why_it_holds_focus": "",
+                    "confusion_priority": "",
+                    "closed_book_target": "",
+                },
                 "must_answer": [
                     "这一页最少要回答哪 2-4 个具体问题？",
                     "学习者看完后还要能做到什么？"

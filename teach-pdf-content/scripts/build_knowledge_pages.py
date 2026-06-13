@@ -364,6 +364,46 @@ def teaching_contract_for(
     return must_answer, exit_outcomes, failure_signals
 
 
+def page_brief_for(
+    node: dict,
+    page_kind: str,
+    section_title: str,
+    entry_question: str,
+    teaching_goal: str,
+    must_answer: list[str],
+    exit_outcomes: list[str],
+    failure_signals: list[str],
+) -> dict[str, str]:
+    title = str(node.get("title") or section_title or node.get("id") or "该知识点").strip()
+    if page_kind == "comparison":
+        best_entry_point = f"先给出最容易混淆的对象，再说明 {title} 的判别标准。"
+    elif page_kind in {"representation", "implementation"}:
+        best_entry_point = f"先解释为什么要这样表示或这样实现，再展开 {title} 的字段、布局和代价。"
+    elif page_kind in {"procedure", "principle", "formula"}:
+        best_entry_point = f"先给一个能追踪步骤的最小例子，再解释 {title} 为什么这样成立。"
+    else:
+        best_entry_point = f"先用一个最小例子说明 {title} 在解决什么问题。"
+
+    minimum_example_hint = (
+        f"{title} 需要一个足以手工分析、可直接对应对象或数据的最小例子，不能只给口头定义。"
+    )
+    why_it_holds_focus = next(
+        (item for item in must_answer if "为什么" in item or "为何" in item),
+        f"必须讲清 {title} 的核心机制为什么成立，而不是只给结论。",
+    )
+    confusion_priority = failure_signals[0] if failure_signals else f"重点消除把 {title} 和相邻概念混淆的问题。"
+    closed_book_target = exit_outcomes[0] if exit_outcomes else (teaching_goal or f"闭卷时能讲清 {title} 的核心机制。")
+
+    return {
+        "learner_doubt": entry_question or f"{title} 到底在回答什么问题？",
+        "best_entry_point": best_entry_point,
+        "minimum_example_hint": minimum_example_hint,
+        "why_it_holds_focus": why_it_holds_focus,
+        "confusion_priority": confusion_priority,
+        "closed_book_target": closed_book_target,
+    }
+
+
 def build_page(
     node: dict,
     node_exercise_map: dict[str, dict],
@@ -418,6 +458,16 @@ def build_page(
         entry_question=entry_question,
         summary=summary,
     )
+    page_brief = page_brief_for(
+        node=node,
+        page_kind=page_kind,
+        section_title=section_title,
+        entry_question=entry_question,
+        teaching_goal=teaching_goal,
+        must_answer=must_answer,
+        exit_outcomes=exit_outcomes,
+        failure_signals=failure_signals,
+    )
 
     if extracted_blocks:
         blocks = list(extracted_blocks)
@@ -464,6 +514,7 @@ def build_page(
         "learning_goal": teaching_goal,
         "entry_question": entry_question,
         "page_summary": summary,
+        "page_brief": page_brief,
         "must_answer": must_answer,
         "exit_outcomes": exit_outcomes,
         "failure_signals": failure_signals,

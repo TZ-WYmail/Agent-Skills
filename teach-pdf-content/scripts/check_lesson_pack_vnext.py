@@ -236,6 +236,16 @@ def page_identity_set(page: dict[str, object]) -> set[str]:
     return {item for item in identities if item}
 
 
+def is_meaningful_mapping(value: object, keys: list[str], min_chars: int) -> bool:
+    if not isinstance(value, dict):
+        return False
+    for key in keys:
+        text = str(value.get(key) or "").strip()
+        if not is_meaningful_text(text, min_chars):
+            return False
+    return True
+
+
 def add_page_issue(
     issues: list[dict[str, object]],
     severity: str,
@@ -374,6 +384,7 @@ def check_knowledge_pages(
             "learning_goal",
             "entry_question",
             "page_summary",
+            "page_brief",
             "blocks",
         ):
             if key not in page:
@@ -455,6 +466,37 @@ def check_knowledge_pages(
             add_page_issue(issues, "warning", "thin_entry_question", path.name, page, index, "entry_question is too short or placeholder-like")
         if not is_meaningful_text(page.get("page_summary"), 18):
             add_page_issue(issues, "warning", "thin_page_summary", path.name, page, index, "page_summary is too short or placeholder-like")
+        page_brief = page.get("page_brief")
+        if not isinstance(page_brief, dict):
+            add_page_issue(
+                issues,
+                "warning",
+                "missing_page_brief",
+                path.name,
+                page,
+                index,
+                "page should declare a `page_brief` planning block before page content",
+            )
+        else:
+            brief_keys = [
+                "learner_doubt",
+                "best_entry_point",
+                "minimum_example_hint",
+                "why_it_holds_focus",
+                "confusion_priority",
+                "closed_book_target",
+            ]
+            for brief_key in brief_keys:
+                if not is_meaningful_text(page_brief.get(brief_key), 10):
+                    add_page_issue(
+                        issues,
+                        "warning",
+                        "thin_page_brief",
+                        path.name,
+                        page,
+                        index,
+                        f"`page_brief.{brief_key}` is too short or placeholder-like",
+                    )
 
         title = str(page.get("title") or "")
         entry_question = str(page.get("entry_question") or "")
