@@ -27,6 +27,7 @@ Before writing:
 3. assign `C1-C4` complexity to new concepts
 4. decide teaching depth from complexity
 5. confirm how each subsection maps into `knowledge-map.json`
+6. for high-importance `C3/C4` points, sketch what a `10-15 minute micro-lesson` on this point would look like
 
 The note should follow the chapter's knowledge structure, not only the textbook's printing structure.
 
@@ -78,6 +79,13 @@ Each core subsection should normally answer:
 
 Do not put complete self-check answers immediately after the question. Use a final answer area or a collapsible answer block.
 
+Keep the closed loop fixed, but do not force every knowledge point to use the exact same internal explanation order. Choose the order that best teaches the point:
+
+- concept explanations may start from use case then definition
+- structure explanations may start from storage goal then fields
+- algorithm explanations may start from trace then invariant
+- principle explanations may start from the learner's doubt then the argument
+
 ## Complexity-Driven Teaching Depth
 
 Teach different concepts with different depth.
@@ -115,6 +123,7 @@ Needs:
 - nearby-concept comparison
 - implementation or question-type connection
 - closed-book output template
+- usually enough substance to stand as a page-sized micro-lesson
 
 ### `C4`
 
@@ -130,6 +139,7 @@ Needs:
 - code/formula/diagram bridge
 - closed-book output template
 - compressed review form
+- should normally be treated as a standalone page-sized micro-lesson
 
 ## Example Type Rules
 
@@ -155,6 +165,17 @@ If the subsection belongs to trees, graphs, traversal, recursion, state transiti
 - one confusion boundary
 
 If one of these is missing, the subsection is unfinished.
+
+## Micro-Lesson Rule
+
+For high-importance `C3/C4` knowledge points, ask before drafting:
+
+- if I had only 10 to 15 minutes to teach this one point, where would I start?
+- what is the minimum example that makes the mechanism visible?
+- what specific learner doubt must be resolved?
+- what must the learner be able to say closed-book after this page?
+
+Do not let such points collapse into one paragraph under a larger subsection if they deserve independent teaching weight.
 
 ## Beginner Readability Rules
 

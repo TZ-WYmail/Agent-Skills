@@ -16,6 +16,7 @@ REQUIRED_FILES = [
     "practice.md",
     "review-notes.md",
     "knowledge-map.json",
+    "knowledge-pages.json",
     "source-map.md",
     "_meta.json",
 ]
@@ -118,6 +119,31 @@ def check_knowledge_map(path: Path, issues: list[dict[str, object]]) -> None:
             add_issue(issues, "warning", "missing_key", path.name, f"missing top-level key: {key}")
 
 
+def check_knowledge_pages(path: Path, issues: list[dict[str, object]]) -> None:
+    try:
+        data = json.loads(read_text(path))
+    except json.JSONDecodeError as exc:
+        add_issue(issues, "error", "invalid_json", path.name, f"invalid JSON: {exc}")
+        return
+    for key in ("chapter_id", "chapter_title", "pages"):
+        if key not in data:
+            add_issue(issues, "warning", "missing_key", path.name, f"missing top-level key: {key}")
+    pages = data.get("pages")
+    if not isinstance(pages, list) or not pages:
+        add_issue(issues, "warning", "missing_pages", path.name, "knowledge-pages.json should contain at least one page scaffold")
+        return
+    first = pages[0]
+    if not isinstance(first, dict):
+        add_issue(issues, "warning", "invalid_page", path.name, "first page entry should be an object")
+        return
+    for key in ("page_id", "knowledge_point_id", "title", "learning_goal", "entry_question", "page_summary", "blocks"):
+        if key not in first:
+            add_issue(issues, "warning", "missing_page_key", path.name, f"page is missing key: {key}")
+    blocks = first.get("blocks")
+    if not isinstance(blocks, list) or not blocks:
+        add_issue(issues, "warning", "missing_blocks", path.name, "page should contain at least one block")
+
+
 def check_meta(path: Path, issues: list[dict[str, object]]) -> None:
     try:
         data = json.loads(read_text(path))
@@ -153,6 +179,8 @@ def main() -> int:
         check_source_map(root / "source-map.md", issues)
     if (root / "knowledge-map.json").exists():
         check_knowledge_map(root / "knowledge-map.json", issues)
+    if (root / "knowledge-pages.json").exists():
+        check_knowledge_pages(root / "knowledge-pages.json", issues)
     if (root / "_meta.json").exists():
         check_meta(root / "_meta.json", issues)
 

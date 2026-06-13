@@ -11,6 +11,7 @@ The default standard is the vNext learner-facing three-file model:
 Support files:
 
 - `knowledge-map.json`
+- `knowledge-pages.json`
 - `source-map.md`
 - `_meta.json`
 
@@ -31,6 +32,7 @@ lessons/<source-id>/
         |-- practice.md
         |-- review-notes.md
         |-- knowledge-map.json
+        |-- knowledge-pages.json
         |-- source-map.md
         `-- _meta.json
 ```
@@ -60,8 +62,15 @@ For each chapter:
 5. assign complexity levels `C1-C4` to new concepts
 6. decide teaching depth from complexity rather than from textbook heading size
 7. create `knowledge-map.json` before finalizing learner-facing files
+8. for dense chapters, create `knowledge-pages.json` as page-level teaching data for key knowledge points
 
 Do not simply mirror textbook headings if doing so hurts learning clarity.
+
+For high-importance `C3/C4` points, think in terms of:
+
+- what a `10-15 minute micro-lesson` on this point should teach
+- which minimum example deserves its own page-sized explanation
+- which explanation order best fits the point type instead of blindly repeating the same subsection template
 
 ## `detailed-notes.md` Contract
 
@@ -174,6 +183,41 @@ The knowledge map is not decorative. It should support:
 - node-to-practice mapping
 - node-to-review mapping
 - study-mode and review-mode highlighting
+
+## `knowledge-pages.json` Contract
+
+`knowledge-pages.json` is the chapter's page-level teaching data source for frontend rendering.
+
+Minimum requirements:
+
+- top-level metadata
+- `pages`
+- page IDs that map back to:
+  - `knowledge-map.json` nodes
+  - `detailed-notes.md`
+  - `practice.md`
+  - `review-notes.md`
+
+Each important page should normally state:
+
+- the question the page answers
+- the learning goal
+- the page summary
+- the estimated teaching time
+- page blocks such as:
+  - hook
+  - minimum example
+  - why-it-holds
+  - trace
+  - confusion fix
+  - closed-book retell
+
+This file exists so the frontend can render:
+
+- one-knowledge-point-per-page reading
+- node-to-page jumps
+- study/review mode page filtering
+- practice/review backlinks
 
 ## Novice Learnability Contract
 

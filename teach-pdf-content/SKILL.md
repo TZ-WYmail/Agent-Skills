@@ -41,6 +41,7 @@ The default learner-facing chapter model is the vNext three-file structure:
 Support files:
 
 - `knowledge-map.json`
+- `knowledge-pages.json`
 - `source-map.md`
 - `_meta.json`
 
@@ -65,6 +66,7 @@ Always read these references before generating or auditing a full vNext chapter 
 - `references/chapter_output_standard.md`
 - `CHAPTER_OUTPUT_TEMPLATES.md`
 - `KNOWLEDGE_MAP_SCHEMA.md`
+- `KNOWLEDGE_PAGES_SCHEMA.md`
 
 Read `references/teaching_patterns.md` when choosing lesson structure, exercise type, or feedback style.
 
@@ -91,6 +93,7 @@ lessons/<source-id>/
     |-- practice.md
     |-- review-notes.md
     |-- knowledge-map.json
+    |-- knowledge-pages.json
     |-- source-map.md
     `-- _meta.json
 reviews/
@@ -131,17 +134,20 @@ Use:
      - implementation anchors
      - exercise targets
    - Create or update `knowledge-map.json` before finalizing learner-facing files.
+   - For dense chapters, create or update `knowledge-pages.json` as page-level teaching data for key knowledge points.
    - If the material is CS/data-structures/programming-heavy, load `references/subskills/cs-data-structures.md`.
 
 4. Draft the learner-facing chapter pack.
    - Load `references/subskills/lesson-note-builder.md` before drafting `detailed-notes.md`.
    - Load `references/subskills/practice-builder.md` before drafting `practice.md` and `review-notes.md`.
+   - For high-importance `C3/C4` knowledge points, think in terms of a `10-15 minute micro-lesson` before writing chapter prose.
    - Keep long material in Markdown files rather than terminal output.
    - Organize learner-facing output by learning stage:
      - `detailed-notes.md`: teach and explain
      - `practice.md`: test and diagnose
      - `review-notes.md`: compress and reactivate
    - Treat Markdown as a semantic teaching source for later HTML rendering. Use stable section names for trace, why-it-holds, confusions, comparisons, and closed-book output templates.
+   - Do not force every knowledge point into the same subsection order. Keep the teaching closed loop fixed, but choose the internal explanation order by knowledge-point type.
    - Do not create extra learner-facing files unless the user explicitly asks for raw intermediate artifacts.
 
 5. Close the loop and audit.
@@ -160,6 +166,7 @@ For a full chapter pack, generate:
 - `practice.md`
 - `review-notes.md`
 - `knowledge-map.json`
+- `knowledge-pages.json`
 - `source-map.md`
 - `_meta.json`
 
@@ -181,6 +188,7 @@ For a short request, generate only the files that still carry learning value, bu
   - trace or ordered development
   - confusion boundary
   - closed-book retell template
+- High-importance `C3/C4` points should normally be teachable as standalone page-sized micro-lessons, not only as buried subsection fragments.
 
 ## Quality Rules
 

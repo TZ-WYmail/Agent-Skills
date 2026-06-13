@@ -536,6 +536,42 @@ def build_knowledge_map(values: dict[str, str]) -> dict[str, object]:
     }
 
 
+def build_knowledge_pages(values: dict[str, str]) -> dict[str, object]:
+    return {
+        "version": "1.0",
+        "chapter_id": values["chapter_id"],
+        "chapter_title": values["title"],
+        "source_id": values["source_id"],
+        "output_mode": values["output_mode"],
+        "generated_at": values["created_at"],
+        "pages": [
+            {
+                "page_id": "kp-x",
+                "knowledge_point_id": "kp-x",
+                "title": "待补充知识点标题",
+                "type": "concept_explanation",
+                "complexity_level": "C2",
+                "importance_level": "high",
+                "estimated_teaching_minutes": 10,
+                "prerequisites": [],
+                "learning_goal": "",
+                "entry_question": "",
+                "page_summary": "",
+                "notes_anchor": "",
+                "practice_refs": [],
+                "review_refs": [],
+                "source_refs": [],
+                "blocks": [
+                    {"type": "hook", "title": "入口问题", "content": [""]},
+                    {"type": "minimum_example", "title": "最小例子", "content": [""]},
+                    {"type": "why_it_holds", "title": "为什么成立", "content": [""]},
+                    {"type": "closed_book_retell", "title": "闭卷输出", "content": [""]},
+                ],
+            }
+        ],
+    }
+
+
 def choose_templates(language: str) -> dict[str, str]:
     return ZH_TEMPLATES if language == "zh" else EN_TEMPLATES
 
@@ -590,6 +626,12 @@ def main() -> int:
         json.dumps(knowledge_map, ensure_ascii=False, indent=2) + "\n",
         args.overwrite,
     )
+    knowledge_pages = build_knowledge_pages(values)
+    results["knowledge-pages.json"] = write_text(
+        out_dir / "knowledge-pages.json",
+        json.dumps(knowledge_pages, ensure_ascii=False, indent=2) + "\n",
+        args.overwrite,
+    )
 
     meta = {
         "title": args.title,
@@ -608,6 +650,7 @@ def main() -> int:
             "practice.md",
             "review-notes.md",
             "knowledge-map.json",
+            "knowledge-pages.json",
             "source-map.md",
         ],
     }

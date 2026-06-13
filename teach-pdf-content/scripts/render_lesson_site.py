@@ -81,6 +81,7 @@ class Chapter:
     path: Path
     files: list[Path]
     knowledge_map_path: Path | None
+    knowledge_pages_path: Path | None
     note_lines: int
     note_chars: int
 
@@ -142,6 +143,7 @@ def discover_chapters(lessons_root: Path) -> list[Chapter]:
         note_path = next((chapter_dir / name for name in note_candidates if (chapter_dir / name).exists()), None)
         note_text = read_text(note_path) if note_path else ""
         knowledge_map_path = chapter_dir / "knowledge-map.json"
+        knowledge_pages_path = chapter_dir / "knowledge-pages.json"
         chapters.append(
             Chapter(
                 chapter_id=chapter_dir.name,
@@ -153,6 +155,7 @@ def discover_chapters(lessons_root: Path) -> list[Chapter]:
                 path=chapter_dir,
                 files=files,
                 knowledge_map_path=knowledge_map_path if knowledge_map_path.exists() else None,
+                knowledge_pages_path=knowledge_pages_path if knowledge_pages_path.exists() else None,
                 note_lines=note_text.count("\n") + (1 if note_text else 0),
                 note_chars=len(note_text),
             )
@@ -460,6 +463,173 @@ def render_knowledge_map(chapter: Chapter) -> str:
         </div>
       </div>
       {cluster_block}
+    </section>
+    """
+
+
+def render_page_block_content(content: object) -> str:
+    if isinstance(content, list):
+        items = [str(item).strip() for item in content if str(item).strip()]
+        if not items:
+            return ""
+        return "<ul>" + "".join(f"<li>{inline_markdown(item)}</li>" for item in items) + "</ul>"
+    text = str(content or "").strip()
+    if not text:
+        return ""
+    return markdown_to_html(text)
+
+
+def render_block_badge(block_type: str) -> str:
+    label_map = {
+        "hook": "问题",
+        "minimum_example": "例子",
+        "intuition": "直觉",
+        "formal_statement": "结论",
+        "why_it_holds": "为什么",
+        "trace": "过程",
+        "comparison": "对比",
+        "confusion_fix": "易错",
+        "implementation_bridge": "实现",
+        "closed_book_retell": "闭卷",
+        "mini_check": "自测",
+        "recap": "总结",
+    }
+    return label_map.get(block_type, block_type)
+
+
+def render_knowledge_pages(chapter: Chapter) -> str:
+    if not chapter.knowledge_pages_path:
+        return ""
+    try:
+        data = load_json(chapter.knowledge_pages_path)
+    except json.JSONDecodeError:
+        return ""
+
+    pages = [page for page in data.get("pages", []) if isinstance(page, dict)]
+    if not pages:
+        return ""
+
+    nav_cards: list[str] = []
+    article_cards: list[str] = []
+    for index, page in enumerate(pages):
+        page_id = str(page.get("page_id") or f"page-{index + 1}")
+        title = str(page.get("title") or page_id)
+        summary = str(page.get("page_summary") or page.get("entry_question") or "").strip()
+        complexity = str(page.get("complexity_level") or "").strip()
+        importance = str(page.get("importance_level") or "").strip()
+        minutes = page.get("estimated_teaching_minutes")
+        badges = []
+        for item in (complexity, importance):
+            if item:
+                badges.append(f'<span class="meta-badge">{escape(item)}</span>')
+        if minutes:
+            badges.append(f'<span class="meta-badge">{escape(str(minutes))} min</span>')
+
+        nav_cards.append(
+            f"""
+            <button class="kp-nav-card" type="button" data-kp-target="{escape(page_id)}" aria-pressed="{str(index == 0).lower()}">
+              <span>{index + 1:02d}</span>
+              <strong>{escape(title)}</strong>
+              <small>{inline_markdown(summary or "打开这一页知识点讲解")}</small>
+            </button>
+            """
+        )
+
+        block_cards: list[str] = []
+        for block in page.get("blocks", []):
+            if not isinstance(block, dict):
+                continue
+            block_type = str(block.get("type") or "")
+            block_title = str(block.get("title") or render_block_badge(block_type))
+            block_html = render_page_block_content(block.get("content"))
+            if not block_html:
+                continue
+            block_cards.append(
+                f"""
+                <article class="kp-block kp-block-{escape(block_type or 'content')}">
+                  <div class="kp-block-head">
+                    <span class="kp-block-badge">{escape(render_block_badge(block_type))}</span>
+                    <h3>{escape(block_title)}</h3>
+                  </div>
+                  <div class="markdown-body">{block_html}</div>
+                </article>
+                """
+            )
+
+        practice_refs = [str(item) for item in page.get("practice_refs", []) if str(item).strip()]
+        review_refs = [str(item) for item in page.get("review_refs", []) if str(item).strip()]
+        practice_html = ""
+        if practice_refs:
+            practice_html = (
+                '<div class="kp-ref-row"><span class="eyebrow">练习关联</span><p>'
+                + " / ".join(escape(item) for item in practice_refs)
+                + "</p></div>"
+            )
+        review_html = ""
+        if review_refs:
+            review_html = (
+                '<div class="kp-ref-row"><span class="eyebrow">复习关联</span><p>'
+                + " / ".join(escape(item) for item in review_refs)
+                + "</p></div>"
+            )
+
+        article_cards.append(
+            f"""
+            <article class="kp-page" id="kp-{escape(page_id)}" data-kp-page="{escape(page_id)}" data-active="{str(index == 0).lower()}">
+              <header class="kp-page-head">
+                <div>
+                  <span class="eyebrow">知识点页 {index + 1:02d}</span>
+                  <h2>{escape(title)}</h2>
+                </div>
+                <div class="meta-badge-row">
+                  {''.join(badges)}
+                </div>
+              </header>
+              <div class="focus-callout">
+                <span class="eyebrow">入口问题</span>
+                <p>{inline_markdown(str(page.get("entry_question") or summary or title))}</p>
+              </div>
+              <div class="kp-page-goal">
+                <div class="kp-ref-row">
+                  <span class="eyebrow">学完要会</span>
+                  <p>{inline_markdown(str(page.get("learning_goal") or summary or title))}</p>
+                </div>
+                {practice_html}
+                {review_html}
+              </div>
+              <div class="kp-block-grid">
+                {''.join(block_cards)}
+              </div>
+            </article>
+            """
+        )
+
+    return f"""
+    <section class="knowledge-pages-board" id="knowledge-pages" data-kp-root>
+      <div class="section-topline">
+        <span class="eyebrow">知识点翻页</span>
+        <h2>按知识点逐页阅读，不再在整章 Markdown 里来回滚动</h2>
+      </div>
+      <div class="knowledge-pages-shell">
+        <aside class="kp-nav">
+          <div class="kp-nav-head">
+            <span class="eyebrow">快速翻页</span>
+            <p>每一页都是一个可以独立讲清的知识点。</p>
+          </div>
+          <div class="kp-nav-list">
+            {''.join(nav_cards)}
+          </div>
+        </aside>
+        <div class="kp-stage">
+          <div class="kp-toolbar">
+            <button class="inline-tool" type="button" data-kp-move="prev">上一页</button>
+            <button class="inline-tool" type="button" data-kp-move="next">下一页</button>
+          </div>
+          <div class="kp-page-stack">
+            {''.join(article_cards)}
+          </div>
+        </div>
+      </div>
     </section>
     """
 
@@ -1138,6 +1308,11 @@ def build_quick_nav(chapter: Chapter) -> str:
         items.append(
             f'<a href="#{escape(path.stem)}"><span>{escape(short_label)}</span><strong>{escape(long_label)}</strong></a>'
         )
+    if chapter.knowledge_pages_path:
+        items.insert(
+            1 if chapter.knowledge_map_path else 0,
+            '<a href="#knowledge-pages"><span>Pages</span><strong>Knowledge Pages</strong></a>',
+        )
     return "\n".join(items)
 
 
@@ -1233,6 +1408,7 @@ def render_chapter_page(course_title: str, chapter: Chapter, out_dir: Path) -> N
       </header>
 
       {render_knowledge_map(chapter)}
+      {render_knowledge_pages(chapter)}
 
       <section class="reading-notes">
         <div class="reading-card">
@@ -1565,6 +1741,142 @@ code, pre {
   border-radius: 24px;
   background: linear-gradient(135deg, rgba(255,255,255,0.94), rgba(247,239,226,0.92));
   border: 1px solid rgba(120, 94, 61, 0.12);
+}
+.knowledge-pages-board {
+  margin: 1rem 0 1.35rem;
+  padding: 1.1rem;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(238,244,239,0.92));
+  border: 1px solid rgba(83, 110, 88, 0.12);
+}
+.knowledge-pages-shell {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.85fr) minmax(0, 1.8fr);
+  gap: 1rem;
+  align-items: start;
+}
+.kp-nav,
+.kp-page,
+.kp-block {
+  border-radius: 20px;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(95, 82, 63, 0.09);
+}
+.kp-nav {
+  padding: 1rem;
+}
+.kp-nav-head p {
+  margin: 0.3rem 0 0;
+  color: #586475;
+  line-height: 1.6;
+}
+.kp-nav-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+}
+.kp-nav-card {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  border-radius: 16px;
+  border: 1px solid rgba(95, 82, 63, 0.08);
+  background: rgba(255,255,255,0.8);
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+.kp-nav-card:hover {
+  transform: translateY(-2px);
+}
+.kp-nav-card[aria-pressed="true"] {
+  background: linear-gradient(135deg, #fff9f1, #eaf4ee);
+  border-color: rgba(83, 110, 88, 0.24);
+}
+.kp-nav-card span {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.2rem 0.48rem;
+  border-radius: 999px;
+  background: rgba(83, 110, 88, 0.1);
+  color: #44624c;
+  font: 700 0.74rem/1.2 "IBM Plex Sans", "Segoe UI Variable Text", sans-serif;
+}
+.kp-nav-card strong {
+  font: 700 0.98rem/1.35 "IBM Plex Sans", "Segoe UI Variable Text", sans-serif;
+}
+.kp-nav-card small {
+  color: #667283;
+  line-height: 1.45;
+}
+.kp-stage {
+  display: grid;
+  gap: 0.85rem;
+}
+.kp-toolbar {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+.kp-page {
+  display: none;
+  padding: 1.1rem;
+  animation: rise 220ms ease;
+}
+.kp-page[data-active="true"] {
+  display: block;
+}
+.kp-page-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: end;
+}
+.kp-page-head h2 {
+  margin: 0.24rem 0 0;
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+.kp-page-goal {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1rem 0;
+}
+.kp-ref-row {
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  background: rgba(248, 250, 247, 0.94);
+  border: 1px solid rgba(83, 110, 88, 0.1);
+}
+.kp-ref-row p {
+  margin: 0.28rem 0 0;
+  color: #4e5967;
+  line-height: 1.62;
+}
+.kp-block-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.85rem;
+}
+.kp-block {
+  padding: 0.95rem;
+}
+.kp-block-head {
+  display: grid;
+  gap: 0.24rem;
+  margin-bottom: 0.7rem;
+}
+.kp-block-head h3 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+.kp-block-badge {
+  width: fit-content;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(83, 110, 88, 0.1);
+  color: #44624c;
+  font: 700 0.74rem/1.2 "IBM Plex Sans", "Segoe UI Variable Text", sans-serif;
 }
 .knowledge-map-problem {
   margin: 0 0 1rem;
@@ -2054,7 +2366,8 @@ code, pre {
   .hero,
   .reading-notes,
   .mode-switcher,
-  .knowledge-map-shell {
+  .knowledge-map-shell,
+  .knowledge-pages-shell {
     grid-template-columns: 1fr;
   }
 }
@@ -2069,7 +2382,8 @@ code, pre {
   .spotlight-grid,
   .review-timeline,
   .mini-card-grid,
-  .dashboard-grid { grid-template-columns: 1fr; }
+  .dashboard-grid,
+  .kp-block-grid { grid-template-columns: 1fr; }
 }
 """
     js = """const tabs = Array.from(document.querySelectorAll('[data-stage-target]'));
@@ -2188,6 +2502,44 @@ document.querySelectorAll('[data-copy-target]').forEach((button) => {
     }
   });
 });
+
+const kpRoot = document.querySelector('[data-kp-root]');
+if (kpRoot) {
+  const kpButtons = Array.from(kpRoot.querySelectorAll('[data-kp-target]'));
+  const kpPages = Array.from(kpRoot.querySelectorAll('[data-kp-page]'));
+  let kpIndex = Math.max(0, kpPages.findIndex((page) => page.dataset.active === 'true'));
+
+  function activateKnowledgePage(index) {
+    if (!kpPages.length) return;
+    kpIndex = Math.max(0, Math.min(index, kpPages.length - 1));
+    kpPages.forEach((page, current) => {
+      if (current === kpIndex) {
+        page.setAttribute('data-active', 'true');
+      } else {
+        page.setAttribute('data-active', 'false');
+      }
+    });
+    kpButtons.forEach((button, current) => {
+      button.setAttribute('aria-pressed', String(current === kpIndex));
+    });
+  }
+
+  kpButtons.forEach((button, index) => {
+    button.addEventListener('click', () => activateKnowledgePage(index));
+  });
+
+  kpRoot.querySelectorAll('[data-kp-move]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (button.dataset.kpMove === 'prev') {
+        activateKnowledgePage(kpIndex - 1);
+      } else {
+        activateKnowledgePage(kpIndex + 1);
+      }
+    });
+  });
+
+  activateKnowledgePage(kpIndex);
+}
 """
     write_text(out_dir / "assets" / "site.css", css)
     write_text(out_dir / "assets" / "site.js", js)
