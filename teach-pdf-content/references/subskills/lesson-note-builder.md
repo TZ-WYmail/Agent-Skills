@@ -25,9 +25,16 @@ Before writing:
 1. extract subsection knowledge points
 2. mark which concepts are new in this subsection
 3. assign `C1-C4` complexity to new concepts
-4. decide teaching depth from complexity
-5. confirm how each subsection maps into `knowledge-map.json`
-6. for high-importance `C3/C4` points, sketch what a `10-15 minute micro-lesson` on this point would look like
+4. assign a teaching contract for each page:
+   - `page_kind`
+   - `teaching_profile`
+   - `clarity_risk`
+   - `must_answer`
+   - `exit_outcomes`
+   - `failure_signals`
+5. decide teaching depth from the teaching contract, not from complexity alone
+6. confirm how each subsection maps into `knowledge-map.json`
+7. for high-importance `C3/C4` points, sketch what a `10-15 minute micro-lesson` on this point would look like
 
 The note should follow the chapter's knowledge structure, not only the textbook's printing structure.
 
@@ -99,6 +106,12 @@ Keep the closed loop fixed, but do not force every knowledge point to use the ex
 
 Teach different concepts with different depth.
 
+Important:
+
+- complexity is not permission to under-explain
+- `C1/C2` does not mean "just fill the minimum blocks"
+- if a page has high confusion risk, heavy dependency load, or transfer burden, increase the teaching profile even when the complexity label is not high
+
 ### `C1`
 
 Needs:
@@ -118,6 +131,8 @@ Needs:
 - why this definition exists
 - easy confusion
 - closed-book wording
+
+If the learner could still reasonably ask "why is this designed this way?" or "how do I tell it apart from the nearby concept?", do not keep this page at a lazy minimum. Upgrade the page's teaching profile.
 
 ### `C3`
 
@@ -185,6 +200,18 @@ For high-importance `C3/C4` knowledge points, ask before drafting:
 - what must the learner be able to say closed-book after this page?
 
 Do not let such points collapse into one paragraph under a larger subsection if they deserve independent teaching weight.
+
+## Anti-Laziness Rule
+
+Do not treat the subsection template as the task.
+
+The real task is:
+
+1. answer the page's `must_answer` questions
+2. produce the page's `exit_outcomes`
+3. remove the listed `failure_signals`
+
+If a page has the correct block names but still fails these three checks, the page is unfinished.
 
 ## Beginner Readability Rules
 

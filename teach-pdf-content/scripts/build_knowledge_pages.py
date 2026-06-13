@@ -201,6 +201,42 @@ def page_type_for(node: dict) -> str:
     return "concept_explanation"
 
 
+def page_kind_for(node: dict, page_type: str) -> str:
+    mapping = {
+        "concept_explanation": "concept",
+        "representation_explanation": "representation",
+        "procedure_explanation": "procedure",
+        "comparison_explanation": "comparison",
+        "principle_explanation": "principle",
+        "formula_explanation": "formula",
+        "implementation_bridge": "implementation",
+    }
+    node_type = str(node.get("type") or "")
+    if node_type == "implementation":
+        return "implementation"
+    return mapping.get(page_type, "concept")
+
+
+def teaching_profile_for(node: dict, page_kind: str) -> str:
+    complexity = str(node.get("complexity_level") or "")
+    importance = str(node.get("importance_level") or "").lower()
+    if complexity in {"C3", "C4"}:
+        return "deep"
+    if page_kind in {"procedure", "principle", "formula", "comparison"} or importance == "high":
+        return "standard"
+    return "lite"
+
+
+def clarity_risk_for(node: dict, page_kind: str) -> str:
+    complexity = str(node.get("complexity_level") or "")
+    importance = str(node.get("importance_level") or "").lower()
+    if page_kind in {"comparison", "principle", "procedure"}:
+        return "high"
+    if complexity in {"C3", "C4"} or importance == "high":
+        return "high"
+    return "medium"
+
+
 def minutes_for(complexity: str) -> int:
     return {"C1": 6, "C2": 8, "C3": 12, "C4": 15}.get(complexity, 10)
 
@@ -290,6 +326,44 @@ def build_fallback_blocks(
     return blocks
 
 
+def teaching_contract_for(
+    node: dict,
+    page_kind: str,
+    teaching_profile: str,
+    section_title: str,
+    entry_question: str,
+    summary: str,
+) -> tuple[list[str], list[str], list[str]]:
+    title = str(node.get("title") or section_title or node.get("id") or "该知识点").strip()
+    complexity = str(node.get("complexity_level") or "")
+
+    must_answer = [
+        entry_question or f"{title}到底在回答什么问题？",
+        f"{title}最核心的判断标准、机制或使用条件是什么？",
+    ]
+    exit_outcomes = [
+        f"能用自己的话解释 {title} 的核心结论或机制",
+        f"能结合一个最小例子说明 {title} 怎么判断、怎么用，或为什么成立",
+    ]
+    failure_signals = [
+        f"仍然需要回到原文才能说明 {title} 的实际机制",
+        f"仍然会把 {title} 和相邻概念混淆，说明边界与对比没有讲清",
+    ]
+
+    if page_kind in {"comparison", "representation", "implementation"}:
+        must_answer.append(f"{title}和相邻方案的真正区别与选用标准是什么？")
+        exit_outcomes.append(f"能说出 {title} 适合什么场景，不适合什么场景")
+    if page_kind in {"procedure", "principle", "formula"} or complexity in {"C3", "C4"}:
+        must_answer.append(f"{title}为什么成立，或者它的步骤为什么这样安排？")
+        exit_outcomes.append(f"能手工追踪 {title} 的关键步骤或论证链")
+        failure_signals.append(f"只能背结论，不能解释 {title} 为什么这样做")
+    if teaching_profile == "deep":
+        must_answer.append(f"如果把 {title} 用错，最容易错在什么边界或陷阱上？")
+        exit_outcomes.append(f"能指出 {title} 最容易误用的边界，并给出纠正说法")
+
+    return must_answer, exit_outcomes, failure_signals
+
+
 def build_page(
     node: dict,
     node_exercise_map: dict[str, dict],
@@ -307,6 +381,9 @@ def build_page(
         raw_blocks = child_blocks(section_level, section_lines)
 
     page_type = page_type_for(node)
+    page_kind = page_kind_for(node, page_type)
+    teaching_profile = teaching_profile_for(node, page_kind)
+    clarity_risk = clarity_risk_for(node, page_kind)
     extracted_blocks: list[dict[str, object]] = []
     entry_question = ""
     for block in raw_blocks:
@@ -333,6 +410,14 @@ def build_page(
     summary = str(node.get("summary") or "").strip() or summarize_markdown(combined_raw)
     paragraphs = split_paragraphs(combined_raw)
     teaching_goal = str(node.get("teaching_goal") or "").strip()
+    must_answer, exit_outcomes, failure_signals = teaching_contract_for(
+        node=node,
+        page_kind=page_kind,
+        teaching_profile=teaching_profile,
+        section_title=section_title,
+        entry_question=entry_question,
+        summary=summary,
+    )
 
     if extracted_blocks:
         blocks = list(extracted_blocks)
@@ -369,13 +454,19 @@ def build_page(
         "knowledge_point_id": node_id,
         "title": str(node.get("title") or ""),
         "type": page_type,
+        "page_kind": page_kind,
         "complexity_level": str(node.get("complexity_level") or ""),
         "importance_level": str(node.get("importance_level") or ""),
+        "teaching_profile": teaching_profile,
+        "clarity_risk": clarity_risk,
         "estimated_teaching_minutes": minutes_for(str(node.get("complexity_level") or "")),
         "prerequisites": [str(item) for item in node.get("prerequisites", [])],
         "learning_goal": teaching_goal,
         "entry_question": entry_question,
         "page_summary": summary,
+        "must_answer": must_answer,
+        "exit_outcomes": exit_outcomes,
+        "failure_signals": failure_signals,
         "notes_anchor": notes_anchor,
         "practice_refs": practice_refs,
         "review_refs": review_refs,

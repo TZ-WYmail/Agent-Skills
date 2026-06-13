@@ -47,13 +47,31 @@ chapters/<chapter-id>/knowledge-pages.json
   "knowledge_point_id": "kp-07-08",
   "title": "连通分量、生成树与生成森林",
   "type": "principle_explanation",
+  "page_kind": "principle",
   "complexity_level": "C3",
   "importance_level": "high",
+  "teaching_profile": "deep",
+  "clarity_risk": "high",
   "estimated_teaching_minutes": 12,
   "prerequisites": ["kp-07-06", "kp-07-07"],
   "learning_goal": "读完后能解释一次无向图遍历为什么恰好得到一个连通分量，并说明树边为什么构成生成树或生成森林",
   "entry_question": "遍历一次图，除了访问所有点，还会顺手暴露哪些结构信息？",
   "page_summary": "无向图中，从一个未访问点出发的一次 DFS/BFS 恰好覆盖它所在的一个连通分量；首次发现新点留下的树边连接全部访问点且不成环，因此形成生成树或生成森林。",
+  "must_answer": [
+    "为什么一次 DFS/BFS 恰好对应一块连通分量？",
+    "为什么遍历中留下的树边会构成生成树或生成森林？",
+    "它和强连通分量、最小生成树分别有什么区别？"
+  ],
+  "exit_outcomes": [
+    "能口头解释“为什么恰好是一块”",
+    "能指出树边为什么不成环",
+    "能区分生成树、生成森林、最小生成树"
+  ],
+  "failure_signals": [
+    "仍然把生成树和最小生成树混为一谈",
+    "只能背结论，不能解释为什么一趟遍历刚好得到一块",
+    "遇到非连通图时不会说明生成森林是怎么来的"
+  ],
   "notes_anchor": "detailed-notes#7-4-1-连通分量生成树与生成森林",
   "practice_refs": ["Q-03", "Q-08"],
   "review_refs": ["C04", "模板 1"],
@@ -79,6 +97,47 @@ chapters/<chapter-id>/knowledge-pages.json
 
 - 类型用于指导前端和生成器，不要求学习者看到
 - 类型决定 block 的推荐组合和展示顺序
+
+### 5.1 teaching contract 字段
+
+除了 `type`，每个 page 还应显式写出教学契约字段：
+
+- `page_kind`
+  - `concept`
+  - `representation`
+  - `procedure`
+  - `comparison`
+  - `principle`
+  - `formula`
+  - `implementation`
+- `teaching_profile`
+  - `lite`
+  - `standard`
+  - `deep`
+- `clarity_risk`
+  - `low`
+  - `medium`
+  - `high`
+
+原则：
+
+- `complexity_level` 只决定上限，不直接决定“是否要讲清”
+- `page_kind` 决定这一页到底是在讲定义、过程、原理、对比还是实现
+- `clarity_risk` 决定这一页是否容易让初学者“以为看懂了，其实没有”
+- `teaching_profile` 决定 block 密度，但不是允许“只写标题改写版”
+
+### 5.2 must-answer / exit-outcomes / failure-signals
+
+为了防止模型只按框架做最低解释，每个 page 在内容块之前应显式写出：
+
+- `must_answer`
+  - 这页必须回答的 2-4 个具体问题
+- `exit_outcomes`
+  - 学习者看完后必须能说出、判断出、或手工追踪出的内容
+- `failure_signals`
+  - 如果学习者仍会问这些问题，说明这页还没讲清楚
+
+这三个字段是“教学契约”，不是装饰。checker 应使用它们判断该页是否只是最低合规。
 
 
 ## 6. block 结构
@@ -133,6 +192,20 @@ chapters/<chapter-id>/knowledge-pages.json
   - `confusion_fix`
   - `closed_book_retell`
 
+同时，不同 `page_kind` 和 `teaching_profile` 会影响 block 组合：
+
+- `representation` / `implementation`
+  - 通常必须有 `implementation_bridge`
+- `comparison`
+  - 通常必须有 `comparison`
+- `procedure` / `principle` / `formula`
+  - 通常必须有 `why_it_holds`
+  - 通常必须有 `trace`
+- `lite`
+  - 可以不写 full trace，但不能不讲最小例子和误区
+- `deep`
+  - 不应缺 `why_it_holds`、`trace`、`closed_book_retell`
+
 
 ## 8. 最小可用要求
 
@@ -143,11 +216,16 @@ chapters/<chapter-id>/knowledge-pages.json
   - `page_id`
   - `knowledge_point_id`
   - `title`
+  - `page_kind`
   - `complexity_level`
   - `importance_level`
+  - `teaching_profile`
+  - `clarity_risk`
   - `learning_goal`
   - `entry_question`
   - `page_summary`
+  - `must_answer`
+  - `exit_outcomes`
   - `blocks`
 - 每个重点 page 至少有 3 个以上 block
 

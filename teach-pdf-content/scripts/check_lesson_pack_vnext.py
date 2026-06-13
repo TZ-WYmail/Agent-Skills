@@ -4,13 +4,14 @@
 from __future__ import annotations
 
 import argparse
+from difflib import SequenceMatcher
 import json
 import re
 import sys
 from pathlib import Path
 
 
-CHECKER_VERSION = "3.0"
+CHECKER_VERSION = "3.1"
 REQUIRED_FILES = [
     "detailed-notes.md",
     "practice.md",
@@ -21,6 +22,37 @@ REQUIRED_FILES = [
     "_meta.json",
 ]
 
+PAGE_KIND_VALUES = {
+    "concept",
+    "representation",
+    "procedure",
+    "comparison",
+    "principle",
+    "formula",
+    "implementation",
+}
+TEACHING_PROFILE_VALUES = {"lite", "standard", "deep"}
+CLARITY_RISK_VALUES = {"low", "medium", "high"}
+TYPE_TO_PAGE_KIND = {
+    "concept_explanation": "concept",
+    "representation_explanation": "representation",
+    "procedure_explanation": "procedure",
+    "comparison_explanation": "comparison",
+    "principle_explanation": "principle",
+    "formula_explanation": "formula",
+    "implementation_bridge": "implementation",
+}
+PLACEHOLDER_MARKERS = (
+    "TODO",
+    "TBD",
+    "LOx",
+    "KP-x",
+    "待补充",
+    "待补",
+    "未完成",
+    "placeholder",
+)
+
 
 def add_issue(issues: list[dict[str, object]], severity: str, code: str, file: str, message: str) -> None:
     issues.append({"severity": severity, "code": code, "file": file, "message": message})
@@ -28,6 +60,174 @@ def add_issue(issues: list[dict[str, object]], severity: str, code: str, file: s
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def flatten_content(content: object) -> str:
+    if isinstance(content, list):
+        return "\n".join(flatten_content(item) for item in content)
+    if isinstance(content, dict):
+        return "\n".join(flatten_content(value) for value in content.values())
+    return str(content or "")
+
+
+def normalized_text(text: object) -> str:
+    value = str(text or "").strip().lower()
+    value = re.sub(r"\s+", "", value)
+    return value
+
+
+def similarity(a: object, b: object) -> float:
+    left = normalized_text(a)
+    right = normalized_text(b)
+    if not left or not right:
+        return 0.0
+    return SequenceMatcher(None, left, right).ratio()
+
+
+def nonempty_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    result: list[str] = []
+    for item in value:
+        text = str(item or "").strip()
+        if text:
+            result.append(text)
+    return result
+
+
+def has_placeholder_marker(text: object) -> bool:
+    value = str(text or "")
+    return any(marker.lower() in value.lower() for marker in PLACEHOLDER_MARKERS)
+
+
+def is_meaningful_text(text: object, min_chars: int) -> bool:
+    value = normalized_text(text)
+    return len(value) >= min_chars and not has_placeholder_marker(text)
+
+
+def contains_any(text: object, patterns: list[str]) -> bool:
+    value = str(text or "")
+    return any(re.search(pattern, value, re.IGNORECASE) for pattern in patterns)
+
+
+def contains_any_literal(text: object, terms: list[str]) -> bool:
+    value = str(text or "").lower()
+    return any(str(term).lower() in value for term in terms)
+
+
+def has_concrete_marker(text: object) -> bool:
+    return contains_any(
+        text,
+        [
+            r"[0-9A-Za-z]",
+            r"```",
+            r"->|=>|→",
+            r"\|",
+            r"例如|比如|设|若|假设|输入|输出|顶点|边|数组|队列|栈",
+            r"example|input|output|array|queue|stack|graph|node|edge",
+        ],
+    )
+
+
+def has_step_marker(text: object) -> bool:
+    return contains_any(
+        text,
+        [
+            r"(^|\n)\s*(\d+\.\s|-\s)",
+            r"->|=>|→",
+            r"\|",
+            r"先|再|然后|最后|步骤|第.+步",
+            r"first|then|next|finally|step",
+        ],
+    )
+
+
+def has_table_marker(text: object) -> bool:
+    value = str(text or "")
+    return "|" in value and "---" in value
+
+
+def effective_page_kind(page: dict[str, object]) -> str:
+    page_kind = str(page.get("page_kind") or "").strip().lower()
+    if page_kind:
+        return page_kind
+    page_type = str(page.get("type") or "").strip().lower()
+    return TYPE_TO_PAGE_KIND.get(page_type, "")
+
+
+def effective_teaching_profile(page: dict[str, object]) -> str:
+    profile = str(page.get("teaching_profile") or "").strip().lower()
+    if profile:
+        return profile
+    complexity = str(page.get("complexity_level") or "").strip().upper()
+    if complexity in {"C3", "C4"}:
+        return "deep"
+    return "standard"
+
+
+def effective_clarity_risk(page: dict[str, object]) -> str:
+    risk = str(page.get("clarity_risk") or "").strip().lower()
+    if risk:
+        return risk
+    importance = str(page.get("importance_level") or "").strip().lower()
+    return "high" if importance == "high" else "medium"
+
+
+def block_text_map(page: dict[str, object]) -> dict[str, str]:
+    result: dict[str, str] = {}
+    blocks = page.get("blocks")
+    if not isinstance(blocks, list):
+        return result
+    for block in blocks:
+        if not isinstance(block, dict):
+            continue
+        block_type = str(block.get("type") or "").strip()
+        if not block_type or block_type in result:
+            continue
+        result[block_type] = flatten_content(block.get("content"))
+    return result
+
+
+def required_page_blocks(page: dict[str, object]) -> set[str]:
+    page_kind = effective_page_kind(page)
+    profile = effective_teaching_profile(page)
+    clarity_risk = effective_clarity_risk(page)
+    complexity = str(page.get("complexity_level") or "").strip().upper()
+
+    required = {"hook", "formal_statement", "minimum_example", "confusion_fix", "recap"}
+    if profile in {"standard", "deep"} or clarity_risk == "high":
+        required.add("closed_book_retell")
+
+    if page_kind in {"procedure", "principle", "formula"}:
+        required.update({"why_it_holds", "trace"})
+    if page_kind == "comparison":
+        required.add("comparison")
+    if page_kind in {"representation", "implementation"}:
+        required.add("implementation_bridge")
+    if profile == "deep" or complexity in {"C3", "C4"}:
+        required.update({"why_it_holds", "trace", "closed_book_retell"})
+    if page_kind == "concept" and clarity_risk == "high":
+        required.add("why_it_holds")
+
+    return required
+
+
+def page_label(page: dict[str, object], index: int) -> str:
+    page_id = str(page.get("page_id") or f"page-{index + 1}")
+    title = str(page.get("title") or "").strip()
+    return f"{page_id}{' ' + title if title else ''}"
+
+
+def add_page_issue(
+    issues: list[dict[str, object]],
+    severity: str,
+    code: str,
+    file: str,
+    page: dict[str, object],
+    index: int,
+    message: str,
+) -> None:
+    add_issue(issues, severity, code, file, f"{page_label(page, index)} - {message}")
 
 
 def check_required_files(root: Path, issues: list[dict[str, object]]) -> None:
@@ -132,46 +332,275 @@ def check_knowledge_pages(path: Path, issues: list[dict[str, object]]) -> None:
     if not isinstance(pages, list) or not pages:
         add_issue(issues, "warning", "missing_pages", path.name, "knowledge-pages.json should contain at least one page scaffold")
         return
-    first = pages[0]
-    if not isinstance(first, dict):
-        add_issue(issues, "warning", "invalid_page", path.name, "first page entry should be an object")
-        return
-    for key in ("page_id", "knowledge_point_id", "title", "learning_goal", "entry_question", "page_summary", "blocks"):
-        if key not in first:
-            add_issue(issues, "warning", "missing_page_key", path.name, f"page is missing key: {key}")
-    blocks = first.get("blocks")
-    if not isinstance(blocks, list) or not blocks:
-        add_issue(issues, "warning", "missing_blocks", path.name, "page should contain at least one block")
-        return
-    block_types = {
-        str(block.get("type"))
-        for block in blocks
-        if isinstance(block, dict) and block.get("type")
-    }
-    if "hook" not in block_types:
-        add_issue(issues, "warning", "missing_page_hook", path.name, "first page should expose a hook block")
-    if "closed_book_retell" not in block_types:
-        add_issue(issues, "warning", "missing_page_retell", path.name, "first page should expose a closed-book retell block")
-    complexity = str(first.get("complexity_level") or "")
-    importance = str(first.get("importance_level") or "")
-    if complexity in {"C3", "C4"} or importance == "high":
-        for required in ("minimum_example", "why_it_holds"):
+    page_ids: set[str] = set()
+    kp_ids: set[str] = set()
+    for index, page in enumerate(pages):
+        if not isinstance(page, dict):
+            add_issue(issues, "warning", "invalid_page", path.name, f"page #{index + 1} entry should be an object")
+            continue
+
+        for key in (
+            "page_id",
+            "knowledge_point_id",
+            "title",
+            "learning_goal",
+            "entry_question",
+            "page_summary",
+            "blocks",
+        ):
+            if key not in page:
+                add_page_issue(issues, "warning", "missing_page_key", path.name, page, index, f"missing key: {key}")
+
+        page_id = str(page.get("page_id") or "").strip()
+        kp_id = str(page.get("knowledge_point_id") or "").strip()
+        if page_id:
+            if page_id in page_ids:
+                add_page_issue(issues, "warning", "duplicate_page_id", path.name, page, index, "duplicate page_id")
+            page_ids.add(page_id)
+        if kp_id:
+            if kp_id in kp_ids:
+                add_page_issue(issues, "warning", "duplicate_knowledge_point_id", path.name, page, index, "duplicate knowledge_point_id")
+            kp_ids.add(kp_id)
+
+        page_kind = effective_page_kind(page)
+        if not page_kind:
+            add_page_issue(issues, "warning", "missing_page_kind", path.name, page, index, "missing page_kind or unmapped type")
+        elif page_kind not in PAGE_KIND_VALUES:
+            add_page_issue(issues, "warning", "invalid_page_kind", path.name, page, index, f"unsupported page_kind: {page_kind}")
+
+        teaching_profile = effective_teaching_profile(page)
+        if teaching_profile not in TEACHING_PROFILE_VALUES:
+            add_page_issue(
+                issues,
+                "warning",
+                "invalid_teaching_profile",
+                path.name,
+                page,
+                index,
+                f"unsupported teaching_profile: {teaching_profile}",
+            )
+
+        clarity_risk = effective_clarity_risk(page)
+        if clarity_risk not in CLARITY_RISK_VALUES:
+            add_page_issue(
+                issues,
+                "warning",
+                "invalid_clarity_risk",
+                path.name,
+                page,
+                index,
+                f"unsupported clarity_risk: {clarity_risk}",
+            )
+
+        must_answer = nonempty_list(page.get("must_answer"))
+        exit_outcomes = nonempty_list(page.get("exit_outcomes"))
+        if not must_answer:
+            add_page_issue(issues, "warning", "missing_must_answer", path.name, page, index, "page should declare `must_answer`")
+        elif len(must_answer) < 2 and teaching_profile in {"standard", "deep"}:
+            add_page_issue(
+                issues,
+                "warning",
+                "thin_must_answer",
+                path.name,
+                page,
+                index,
+                "standard/deep page should usually declare at least 2 must-answer questions",
+            )
+        if not exit_outcomes:
+            add_page_issue(issues, "warning", "missing_exit_outcomes", path.name, page, index, "page should declare `exit_outcomes`")
+
+        failure_signals = nonempty_list(page.get("failure_signals"))
+        if teaching_profile == "deep" and not failure_signals:
+            add_page_issue(
+                issues,
+                "warning",
+                "missing_failure_signals",
+                path.name,
+                page,
+                index,
+                "deep page should define `failure_signals` for teaching review",
+            )
+
+        if not is_meaningful_text(page.get("learning_goal"), 12):
+            add_page_issue(issues, "warning", "thin_learning_goal", path.name, page, index, "learning_goal is too short or placeholder-like")
+        if not is_meaningful_text(page.get("entry_question"), 10):
+            add_page_issue(issues, "warning", "thin_entry_question", path.name, page, index, "entry_question is too short or placeholder-like")
+        if not is_meaningful_text(page.get("page_summary"), 18):
+            add_page_issue(issues, "warning", "thin_page_summary", path.name, page, index, "page_summary is too short or placeholder-like")
+
+        title = str(page.get("title") or "")
+        entry_question = str(page.get("entry_question") or "")
+        page_summary = str(page.get("page_summary") or "")
+        if similarity(title, entry_question) >= 0.82:
+            add_page_issue(
+                issues,
+                "warning",
+                "lazy_entry_question",
+                path.name,
+                page,
+                index,
+                "entry_question is too similar to the title; it should expose a learner doubt or task",
+            )
+        if similarity(title, page_summary) >= 0.82:
+            add_page_issue(
+                issues,
+                "warning",
+                "lazy_page_summary",
+                path.name,
+                page,
+                index,
+                "page_summary is too similar to the title; it should summarize the mechanism or conclusion",
+            )
+        if similarity(page.get("learning_goal"), page_summary) >= 0.9:
+            add_page_issue(
+                issues,
+                "warning",
+                "duplicate_goal_summary",
+                path.name,
+                page,
+                index,
+                "learning_goal and page_summary are nearly identical",
+            )
+
+        blocks = page.get("blocks")
+        if not isinstance(blocks, list) or not blocks:
+            add_page_issue(issues, "warning", "missing_blocks", path.name, page, index, "page should contain at least one block")
+            continue
+
+        block_types: set[str] = set()
+        block_texts = block_text_map(page)
+        for block in blocks:
+            if not isinstance(block, dict):
+                add_page_issue(issues, "warning", "invalid_block", path.name, page, index, "block entry should be an object")
+                continue
+            block_type = str(block.get("type") or "").strip()
+            if not block_type:
+                add_page_issue(issues, "warning", "missing_block_type", path.name, page, index, "block is missing `type`")
+                continue
+            if block_type in block_types:
+                add_page_issue(issues, "warning", "duplicate_block_type", path.name, page, index, f"duplicate block type: {block_type}")
+            block_types.add(block_type)
+            content_text = flatten_content(block.get("content"))
+            if not is_meaningful_text(content_text, 8):
+                add_page_issue(
+                    issues,
+                    "warning",
+                    "thin_block_content",
+                    path.name,
+                    page,
+                    index,
+                    f"`{block_type}` block is too short or placeholder-like",
+                )
+
+        for required in sorted(required_page_blocks(page)):
             if required not in block_types:
-                add_issue(
+                add_page_issue(
                     issues,
                     "warning",
                     "missing_page_teaching_block",
                     path.name,
-                    f"high-value page should include `{required}`",
+                    page,
+                    index,
+                    f"page is missing required block `{required}` for its teaching profile",
                 )
-    if complexity in {"C3", "C4"} and "trace" not in block_types:
-        add_issue(
-            issues,
-            "warning",
-            "missing_page_trace",
-            path.name,
-            "C3/C4 page should include a trace block",
-        )
+
+        if "minimum_example" in block_texts and not has_concrete_marker(block_texts["minimum_example"]):
+            add_page_issue(
+                issues,
+                "warning",
+                "weak_minimum_example",
+                path.name,
+                page,
+                index,
+                "minimum_example lacks concrete objects, symbols, data, code, or a toy case",
+            )
+        if "trace" in block_texts and not has_step_marker(block_texts["trace"]):
+            add_page_issue(
+                issues,
+                "warning",
+                "weak_trace",
+                path.name,
+                page,
+                index,
+                "trace should show steps, transitions, or a structured walkthrough",
+            )
+        if "why_it_holds" in block_texts and not is_meaningful_text(block_texts["why_it_holds"], 18):
+            add_page_issue(
+                issues,
+                "warning",
+                "weak_why_it_holds",
+                path.name,
+                page,
+                index,
+                "why_it_holds is too thin to explain the mechanism",
+            )
+        if "confusion_fix" in block_texts and not (
+            has_step_marker(block_texts["confusion_fix"])
+            or contains_any_literal(
+                block_texts["confusion_fix"],
+                ["易错点", "纠正", "not", "wrong", "confus", "mistake", "trap"],
+            )
+        ):
+            add_page_issue(
+                issues,
+                "warning",
+                "weak_confusion_fix",
+                path.name,
+                page,
+                index,
+                "confusion_fix should name a specific confusion, misuse, or trap",
+            )
+        if "comparison" in block_texts and not (
+            has_table_marker(block_texts["comparison"])
+            or "vs" in str(block_texts["comparison"]).lower()
+            or has_step_marker(block_texts["comparison"])
+        ):
+            add_page_issue(
+                issues,
+                "warning",
+                "weak_comparison",
+                path.name,
+                page,
+                index,
+                "comparison should explicitly state the distinguishing criterion",
+            )
+        if "implementation_bridge" in block_texts and not (
+            has_step_marker(block_texts["implementation_bridge"])
+            or "`" in str(block_texts["implementation_bridge"])
+            or contains_any_literal(
+                block_texts["implementation_bridge"],
+                ["code", "implement", "field", "array", "pointer", "queue", "stack", "cost"],
+            )
+        ):
+            add_page_issue(
+                issues,
+                "warning",
+                "weak_implementation_bridge",
+                path.name,
+                page,
+                index,
+                "implementation_bridge should connect the page to code, data layout, or operation cost",
+            )
+        if "closed_book_retell" in block_texts and not is_meaningful_text(block_texts["closed_book_retell"], 16):
+            add_page_issue(
+                issues,
+                "warning",
+                "weak_retell",
+                path.name,
+                page,
+                index,
+                "closed_book_retell is too thin to guide oral recall",
+            )
+        if "recap" in block_texts and similarity(block_texts["recap"], page_summary) >= 0.9:
+            add_page_issue(
+                issues,
+                "warning",
+                "duplicate_recap",
+                path.name,
+                page,
+                index,
+                "recap is nearly identical to page_summary",
+            )
 
 
 def check_meta(path: Path, issues: list[dict[str, object]]) -> None:

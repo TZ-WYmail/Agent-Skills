@@ -53,11 +53,12 @@ chapters/<chapter-id>/
 4. 识别每个小节中“新出现的概念”。
 5. 对新概念做复杂度分级 `C1-C4`。
 6. 生成 `knowledge-map.json`。
-7. 先并行生成 `knowledge-pages.json` 中的知识点页。
-8. 再由页级内容汇编 `detailed-notes.md`。
-9. 再根据知识点与掌握目标生成 `practice.md`。
-10. 最后生成 `review-notes.md`。
-11. 生成 `source-map.md` 与 `_meta.json` 作为内部支撑。
+7. 先为每个知识点页定义教学契约：`page_kind`、`teaching_profile`、`clarity_risk`、`must_answer`、`exit_outcomes`、`failure_signals`。
+8. 再并行生成 `knowledge-pages.json` 中的知识点页。
+9. 再由页级内容汇编 `detailed-notes.md`。
+10. 再根据知识点与掌握目标生成 `practice.md`。
+11. 最后生成 `review-notes.md`。
+12. 生成 `source-map.md` 与 `_meta.json` 作为内部支撑。
 
 核心变化：
 

@@ -135,6 +135,9 @@ Use:
      - exercise targets
    - Create or update `knowledge-map.json` before finalizing learner-facing files.
    - Create or update `knowledge-pages.json` as the primary page-level teaching source before finalizing learner-facing files.
+   - Draft each knowledge page in two stages:
+     - stage 1: define the teaching contract (`page_kind`, `teaching_profile`, `clarity_risk`, `must_answer`, `exit_outcomes`, `failure_signals`)
+     - stage 2: write blocks that actually answer that contract
    - For high-importance `C3/C4` points, prepare page-level teaching data as standalone `10-15 minute micro-lessons`, not as afterthoughts extracted from a finished long note.
    - If the material is CS/data-structures/programming-heavy, load `references/subskills/cs-data-structures.md`.
 
@@ -143,8 +146,10 @@ Use:
    - Load `references/subskills/practice-builder.md` before drafting `practice.md` and `review-notes.md`.
    - The default vNext flow is `knowledge-map.json -> knowledge-pages.json -> detailed-notes.md -> practice.md/review-notes.md`.
    - Draft `knowledge-pages.json` first; compile `detailed-notes.md` from those pages instead of treating pages as data extracted from a finished note.
+   - Do not write page blocks before the teaching contract is explicit. A page is unfinished if it has block names but still does not answer its `must_answer` questions.
    - Use `scripts/compile_detailed_notes_from_pages.py <chapter-dir> --overwrite --sync-anchors` when the chapter already has usable page-level teaching data.
    - Use `scripts/build_knowledge_pages.py` only as a compatibility or migration helper for older chapter packs that still start from `detailed-notes.md`.
+   - For a one-command refresh pass on an existing chapter, use `scripts/refresh_chapter_pack.py <chapter-dir>`.
    - Keep long material in Markdown files rather than terminal output.
    - Organize learner-facing output by learning stage:
      - `detailed-notes.md`: teach and explain
@@ -159,6 +164,8 @@ Use:
    - Keep prompt sections answer-free except for short hints; complete answers belong in final answer-key sections.
    - Load `references/subskills/quality-gate.md`.
    - Run `scripts/check_lesson_pack_vnext.py <study-pack-dir>` for vNext packs.
+   - If the checker reports page-level quality warnings in `knowledge-pages.json`, repair the flagged pages first with `scripts/repair_knowledge_pages.py <study-pack-dir>` instead of rerunning the whole chapter.
+   - `scripts/refresh_chapter_pack.py` already performs: build pages -> compile notes -> check -> targeted repair -> recompile notes -> recheck.
    - Run `scripts/check_lesson_pack.py <study-pack-dir>` only for legacy packs.
    - Do not report completion while P0 roughness issues remain.
 

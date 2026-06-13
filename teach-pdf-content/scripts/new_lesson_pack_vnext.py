@@ -10,8 +10,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-TEMPLATE_VERSION = "3.0"
-CHECKER_VERSION = "3.0"
+TEMPLATE_VERSION = "3.1"
+CHECKER_VERSION = "3.1"
 
 
 def slugify(value: str) -> str:
@@ -551,24 +551,41 @@ def build_knowledge_pages(values: dict[str, str]) -> dict[str, object]:
                 "knowledge_point_id": "kp-x",
                 "title": "待补充知识点标题",
                 "type": "concept_explanation",
+                "page_kind": "concept",
                 "complexity_level": "C2",
                 "importance_level": "high",
+                "teaching_profile": "standard",
+                "clarity_risk": "medium",
                 "estimated_teaching_minutes": 10,
                 "prerequisites": [],
                 "learning_goal": "",
                 "entry_question": "",
                 "page_summary": "",
+                "must_answer": [
+                    "这一页最少要回答哪 2-4 个具体问题？",
+                    "学习者看完后还要能做到什么？"
+                ],
+                "exit_outcomes": [
+                    "能用自己的话说出核心机制或区分标准",
+                    "能从最小例子中指出这个知识点怎么用"
+                ],
+                "failure_signals": [
+                    "如果学习者看完后仍会回到书上问“为什么”，说明这页还没讲清",
+                    "如果学习者仍会把它和相邻概念混淆，说明边界和对比不够"
+                ],
                 "notes_anchor": "detailed-notes#x-x-知识点标题",
                 "practice_refs": [],
                 "review_refs": [],
                 "source_refs": [],
                 "blocks": [
                     {"type": "hook", "title": "入口问题", "content": [""]},
+                    {"type": "formal_statement", "title": "正式结论 / 定义", "content": [""]},
                     {"type": "minimum_example", "title": "最小例子", "content": [""]},
                     {"type": "why_it_holds", "title": "为什么成立", "content": [""]},
                     {"type": "trace", "title": "过程追踪", "content": [""]},
                     {"type": "confusion_fix", "title": "易错点 / 误区", "content": [""]},
                     {"type": "closed_book_retell", "title": "闭卷输出", "content": [""]},
+                    {"type": "recap", "title": "一句话回顾", "content": [""]},
                 ],
             }
         ],

@@ -206,6 +206,11 @@ Each important page should normally state:
 - the question the page answers
 - the learning goal
 - the page summary
+- the page kind
+- the teaching profile
+- the clarity risk
+- the page's must-answer questions
+- the page's exit outcomes
 - the estimated teaching time
 - page blocks such as:
   - hook
@@ -221,6 +226,24 @@ This file exists so the frontend can render:
 - node-to-page jumps
 - study/review mode page filtering
 - practice/review backlinks
+
+Do not let complexity tier collapse into "shorter explanation by default".
+
+Use a teaching contract per page:
+
+- `page_kind`: what kind of teaching unit this page is
+- `teaching_profile`: `lite` / `standard` / `deep`
+- `clarity_risk`: how likely a learner is to falsely think they understood it
+- `must_answer`: 2-4 concrete learner questions this page must answer
+- `exit_outcomes`: what the learner must be able to say or do after the page
+- `failure_signals`: what confusion means the page is still under-explained
+
+Interpretation rule:
+
+- complexity decides the ceiling
+- teaching contract decides the obligation
+- a `C2` page with high confusion risk may still need `standard` or `deep` treatment
+- a page is incomplete if it only renames headings without answering its `must_answer` questions
 
 ## Novice Learnability Contract
 
@@ -281,6 +304,27 @@ Rewrite or continue the pack if any failure sign appears:
 - answers are source citations only and do not include real explanations
 - review notes are just compressed prose instead of recall-oriented structure
 - the learner cannot tell what must be memorized versus what only needs understanding
+
+For page-level warnings in `knowledge-pages.json`, prefer targeted repair before full regeneration:
+
+1. run `scripts/check_lesson_pack_vnext.py <chapter-dir>`
+2. repair flagged page blocks with `scripts/repair_knowledge_pages.py <chapter-dir>`
+3. rerun the checker
+
+Use full chapter regeneration only when the page contract itself is wrong, not when a few blocks are weak.
+
+For an existing chapter pack, the recommended command is:
+
+- `scripts/refresh_chapter_pack.py <chapter-dir>`
+
+It orchestrates:
+
+1. `build_knowledge_pages.py`
+2. `compile_detailed_notes_from_pages.py`
+3. `check_lesson_pack_vnext.py`
+4. `repair_knowledge_pages.py` when needed
+5. `compile_detailed_notes_from_pages.py` again when repair changed page content
+6. a final checker pass
 
 ## Rough Note Anti-Patterns
 
