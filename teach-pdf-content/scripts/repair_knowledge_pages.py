@@ -33,6 +33,16 @@ def dump_json(path: Path, data: dict) -> None:
     write_text(path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
 
+def normalize_requested_page_ids(values: list[str] | None) -> set[str]:
+    result: set[str] = set()
+    for value in values or []:
+        for item in str(value or "").split(","):
+            text = item.strip()
+            if text:
+                result.add(text)
+    return result
+
+
 def nonempty_list(value: object) -> list[str]:
     if not isinstance(value, list):
         return []
@@ -154,6 +164,13 @@ def build_recap_content(page: dict) -> str:
 
 
 def collect_checker_issues(chapter_dir: Path) -> dict[str, set[str]]:
+    return collect_checker_issues_for_pages(chapter_dir, selected_page_ids=None)
+
+
+def collect_checker_issues_for_pages(
+    chapter_dir: Path,
+    selected_page_ids: set[str] | None,
+) -> dict[str, set[str]]:
     checker_path = Path(__file__).with_name("check_lesson_pack_vnext.py")
     import importlib.util
 
@@ -163,7 +180,11 @@ def collect_checker_issues(chapter_dir: Path) -> dict[str, set[str]]:
     spec.loader.exec_module(checker)
 
     issues: list[dict[str, object]] = []
-    checker.check_knowledge_pages(chapter_dir / "knowledge-pages.json", issues)
+    checker.check_knowledge_pages(
+        chapter_dir / "knowledge-pages.json",
+        issues,
+        selected_page_ids=selected_page_ids,
+    )
 
     page_codes: dict[str, set[str]] = {}
     for issue in issues:
@@ -204,6 +225,11 @@ def repair_page(page: dict, codes: set[str]) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Repair flagged knowledge-page blocks.")
     parser.add_argument("chapter_dir", help="Chapter directory containing knowledge-pages.json.")
+    parser.add_argument(
+        "--page-id",
+        action="append",
+        help="Only repair the selected page_id or knowledge_point_id. Repeatable; commas are also accepted.",
+    )
     parser.add_argument("--json", action="store_true", help="Print JSON summary.")
     args = parser.parse_args()
 
@@ -212,15 +238,26 @@ def main() -> int:
     if not pages_path.exists():
         raise SystemExit(f"missing file: {pages_path}")
 
-    page_codes = collect_checker_issues(chapter_dir)
+    selected_page_ids = normalize_requested_page_ids(args.page_id)
+    page_codes = collect_checker_issues_for_pages(chapter_dir, selected_page_ids=selected_page_ids or None)
     data = load_json(pages_path)
     pages = data.get("pages", [])
     repaired: list[dict[str, object]] = []
+    missing_targets = set(selected_page_ids)
     if isinstance(pages, list):
         for page in pages:
             if not isinstance(page, dict):
                 continue
             page_id = str(page.get("knowledge_point_id") or page.get("page_id") or "").strip()
+            page_aliases = {
+                page_id,
+                str(page.get("page_id") or "").strip(),
+                str(page.get("knowledge_point_id") or "").strip(),
+            }
+            page_aliases.discard("")
+            if selected_page_ids and page_aliases.isdisjoint(selected_page_ids):
+                continue
+            missing_targets -= page_aliases
             codes = page_codes.get(page_id, set())
             if not codes:
                 continue
@@ -240,6 +277,8 @@ def main() -> int:
 
     summary = {
         "chapter_dir": str(chapter_dir),
+        "selected_page_ids": sorted(selected_page_ids),
+        "missing_target_page_ids": sorted(missing_targets),
         "repaired_pages": len(repaired),
         "repairs": repaired,
     }

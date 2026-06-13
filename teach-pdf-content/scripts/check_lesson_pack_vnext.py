@@ -218,6 +218,24 @@ def page_label(page: dict[str, object], index: int) -> str:
     return f"{page_id}{' ' + title if title else ''}"
 
 
+def normalize_requested_page_ids(values: list[str] | None) -> set[str]:
+    result: set[str] = set()
+    for value in values or []:
+        for item in str(value or "").split(","):
+            text = item.strip()
+            if text:
+                result.add(text)
+    return result
+
+
+def page_identity_set(page: dict[str, object]) -> set[str]:
+    identities = {
+        str(page.get("page_id") or "").strip(),
+        str(page.get("knowledge_point_id") or "").strip(),
+    }
+    return {item for item in identities if item}
+
+
 def add_page_issue(
     issues: list[dict[str, object]],
     severity: str,
@@ -319,25 +337,35 @@ def check_knowledge_map(path: Path, issues: list[dict[str, object]]) -> None:
             add_issue(issues, "warning", "missing_key", path.name, f"missing top-level key: {key}")
 
 
-def check_knowledge_pages(path: Path, issues: list[dict[str, object]]) -> None:
+def check_knowledge_pages(
+    path: Path,
+    issues: list[dict[str, object]],
+    selected_page_ids: set[str] | None = None,
+) -> set[str]:
     try:
         data = json.loads(read_text(path))
     except json.JSONDecodeError as exc:
         add_issue(issues, "error", "invalid_json", path.name, f"invalid JSON: {exc}")
-        return
+        return set()
     for key in ("chapter_id", "chapter_title", "pages"):
         if key not in data:
             add_issue(issues, "warning", "missing_key", path.name, f"missing top-level key: {key}")
     pages = data.get("pages")
     if not isinstance(pages, list) or not pages:
         add_issue(issues, "warning", "missing_pages", path.name, "knowledge-pages.json should contain at least one page scaffold")
-        return
+        return set()
     page_ids: set[str] = set()
     kp_ids: set[str] = set()
+    matched_page_ids: set[str] = set()
     for index, page in enumerate(pages):
         if not isinstance(page, dict):
             add_issue(issues, "warning", "invalid_page", path.name, f"page #{index + 1} entry should be an object")
             continue
+
+        page_identity = page_identity_set(page)
+        if selected_page_ids and page_identity.isdisjoint(selected_page_ids):
+            continue
+        matched_page_ids.update(page_identity & selected_page_ids if selected_page_ids else page_identity)
 
         for key in (
             "page_id",
@@ -601,6 +629,10 @@ def check_knowledge_pages(path: Path, issues: list[dict[str, object]]) -> None:
                 index,
                 "recap is nearly identical to page_summary",
             )
+    if selected_page_ids:
+        for page_id in sorted(selected_page_ids - matched_page_ids):
+            add_issue(issues, "error", "missing_target_page", path.name, f"requested page not found: {page_id}")
+    return matched_page_ids
 
 
 def check_meta(path: Path, issues: list[dict[str, object]]) -> None:
@@ -616,6 +648,11 @@ def check_meta(path: Path, issues: list[dict[str, object]]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check a vNext lesson pack.")
     parser.add_argument("study_pack", help="Study-pack directory.")
+    parser.add_argument(
+        "--page-id",
+        action="append",
+        help="Only validate the selected page_id or knowledge_point_id. Repeatable; commas are also accepted.",
+    )
     parser.add_argument("--json", action="store_true", help="Print a JSON report.")
     parser.add_argument("--allow-warnings", action="store_true", help="Exit zero when only warnings are present.")
     args = parser.parse_args()
@@ -626,28 +663,51 @@ def main() -> int:
         return 2
 
     issues: list[dict[str, object]] = []
-    check_required_files(root, issues)
+    selected_page_ids = normalize_requested_page_ids(args.page_id)
+    matched_page_ids: set[str] = set()
 
-    if (root / "detailed-notes.md").exists():
-        check_detailed_notes(root / "detailed-notes.md", issues)
-    if (root / "practice.md").exists():
-        check_practice(root / "practice.md", issues)
-    if (root / "review-notes.md").exists():
-        check_review(root / "review-notes.md", issues)
-    if (root / "source-map.md").exists():
-        check_source_map(root / "source-map.md", issues)
-    if (root / "knowledge-map.json").exists():
-        check_knowledge_map(root / "knowledge-map.json", issues)
-    if (root / "knowledge-pages.json").exists():
-        check_knowledge_pages(root / "knowledge-pages.json", issues)
-    if (root / "_meta.json").exists():
-        check_meta(root / "_meta.json", issues)
+    if selected_page_ids:
+        knowledge_pages_path = root / "knowledge-pages.json"
+        if not knowledge_pages_path.exists():
+            add_issue(
+                issues,
+                "error",
+                "missing_file",
+                "knowledge-pages.json",
+                "missing required file: knowledge-pages.json",
+            )
+        else:
+            matched_page_ids = check_knowledge_pages(
+                knowledge_pages_path,
+                issues,
+                selected_page_ids=selected_page_ids,
+            )
+    else:
+        check_required_files(root, issues)
+
+        if (root / "detailed-notes.md").exists():
+            check_detailed_notes(root / "detailed-notes.md", issues)
+        if (root / "practice.md").exists():
+            check_practice(root / "practice.md", issues)
+        if (root / "review-notes.md").exists():
+            check_review(root / "review-notes.md", issues)
+        if (root / "source-map.md").exists():
+            check_source_map(root / "source-map.md", issues)
+        if (root / "knowledge-map.json").exists():
+            check_knowledge_map(root / "knowledge-map.json", issues)
+        if (root / "knowledge-pages.json").exists():
+            matched_page_ids = check_knowledge_pages(root / "knowledge-pages.json", issues)
+        if (root / "_meta.json").exists():
+            check_meta(root / "_meta.json", issues)
 
     errors = sum(1 for issue in issues if issue["severity"] == "error")
     warnings = sum(1 for issue in issues if issue["severity"] == "warning")
     report = {
         "path": str(root),
         "checker_version": CHECKER_VERSION,
+        "scope": "selected_pages" if selected_page_ids else "chapter_pack",
+        "selected_page_ids": sorted(selected_page_ids),
+        "matched_page_ids": sorted(matched_page_ids),
         "errors": errors,
         "warnings": warnings,
         "issues": issues,

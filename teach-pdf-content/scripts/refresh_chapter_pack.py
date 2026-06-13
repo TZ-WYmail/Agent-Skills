@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refresh a chapter pack through build, compile, check, targeted repair, recompile, and recheck."""
+"""Refresh a chapter pack through page-first compile, check, repair, and recheck."""
 
 from __future__ import annotations
 
@@ -46,6 +46,18 @@ def script_path(name: str) -> Path:
     return Path(__file__).with_name(name)
 
 
+def normalize_requested_page_ids(values: list[str] | None) -> list[str]:
+    result: list[str] = []
+    seen: set[str] = set()
+    for value in values or []:
+        for item in str(value or "").split(","):
+            text = item.strip()
+            if text and text not in seen:
+                seen.add(text)
+                result.append(text)
+    return result
+
+
 def run_json_step(
     summary: dict[str, object],
     step_name: str,
@@ -67,13 +79,13 @@ def run_json_step(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Refresh a chapter pack through build/compile/check/repair/recompile/recheck."
+        description="Refresh a chapter pack through page-first compile/check/repair/recheck."
     )
     parser.add_argument("chapter_dir", help="Chapter directory.")
     parser.add_argument(
-        "--skip-build-pages",
+        "--rebuild-pages",
         action="store_true",
-        help="Skip build_knowledge_pages.py.",
+        help="Rebuild knowledge-pages.json from detailed-notes.md via build_knowledge_pages.py.",
     )
     parser.add_argument(
         "--skip-compile",
@@ -85,6 +97,11 @@ def main() -> int:
         action="store_true",
         help="Skip repair_knowledge_pages.py even if checker finds page warnings.",
     )
+    parser.add_argument(
+        "--page-id",
+        action="append",
+        help="Refresh only the selected page_id or knowledge_point_id. Repeatable; commas are also accepted.",
+    )
     parser.add_argument("--json", action="store_true", help="Print JSON summary.")
     args = parser.parse_args()
 
@@ -94,12 +111,25 @@ def main() -> int:
         return 2
 
     cwd = Path(__file__).resolve().parent
+    pages_path = chapter_dir / "knowledge-pages.json"
     summary: dict[str, object] = {
         "chapter_dir": str(chapter_dir),
         "steps": [],
     }
+    selected_page_ids = normalize_requested_page_ids(args.page_id)
+    is_targeted_refresh = bool(selected_page_ids)
+    if args.rebuild_pages and is_targeted_refresh:
+        print("--rebuild-pages cannot be combined with --page-id", file=sys.stderr)
+        return 2
 
-    if not args.skip_build_pages:
+    if is_targeted_refresh:
+        summary["scope"] = "selected_pages"
+        summary["selected_page_ids"] = selected_page_ids
+    else:
+        summary["scope"] = "chapter_pack"
+
+    should_rebuild_pages = bool(args.rebuild_pages)
+    if should_rebuild_pages:
         result, _payload = run_json_step(
             summary,
             "build_knowledge_pages",
@@ -112,6 +142,18 @@ def main() -> int:
             else:
                 print(result.stderr, file=sys.stderr)
             return result.returncode
+    elif not pages_path.exists():
+        print(
+            f"missing file: {pages_path}. Run with --rebuild-pages only for migration from detailed-notes.md.",
+            file=sys.stderr,
+        )
+        return 2
+
+    checker_command = [sys.executable, str(script_path("check_lesson_pack_vnext.py")), str(chapter_dir), "--json"]
+    repair_command = [sys.executable, str(script_path("repair_knowledge_pages.py")), str(chapter_dir), "--json"]
+    for page_id in selected_page_ids:
+        checker_command.extend(["--page-id", page_id])
+        repair_command.extend(["--page-id", page_id])
 
     if not args.skip_compile:
         result, _payload = run_json_step(
@@ -137,7 +179,7 @@ def main() -> int:
     check_result, check_payload = run_json_step(
         summary,
         "check_before_repair",
-        [sys.executable, str(script_path("check_lesson_pack_vnext.py")), str(chapter_dir), "--json"],
+        checker_command,
         cwd,
     )
 
@@ -146,7 +188,7 @@ def main() -> int:
         repair_result, repair_payload = run_json_step(
             summary,
             "repair_knowledge_pages",
-            [sys.executable, str(script_path("repair_knowledge_pages.py")), str(chapter_dir), "--json"],
+            repair_command,
             cwd,
         )
         repaired = bool(repair_payload.get("repaired_pages"))
@@ -175,7 +217,7 @@ def main() -> int:
             recheck_result, recheck_payload = run_json_step(
                 summary,
                 "check_after_repair",
-                [sys.executable, str(script_path("check_lesson_pack_vnext.py")), str(chapter_dir), "--json"],
+                checker_command,
                 cwd,
             )
             final_payload = recheck_payload
@@ -191,6 +233,8 @@ def main() -> int:
         "errors": final_payload.get("errors"),
         "warnings": final_payload.get("warnings"),
         "repaired": repaired,
+        "rebuilt_pages": should_rebuild_pages,
+        "targeted_pages": selected_page_ids,
     }
 
     if args.json:

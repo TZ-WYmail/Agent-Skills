@@ -32,18 +32,26 @@ Before writing:
    - `must_answer`
    - `exit_outcomes`
    - `failure_signals`
-5. decide teaching depth from the teaching contract, not from complexity alone
-6. confirm how each subsection maps into `knowledge-map.json`
-7. for high-importance `C3/C4` points, sketch what a `10-15 minute micro-lesson` on this point would look like
+5. write a short internal page brief before page blocks:
+   - learner doubt to resolve first
+   - best teaching entry point
+   - minimum example or counterexample
+   - must-teach why-it-holds segment
+   - likely confusion
+   - expected closed-book output
+6. decide teaching depth from the teaching contract, not from complexity alone
+7. confirm how each subsection maps into `knowledge-map.json`
+8. for high-importance `C3/C4` points, sketch what a `10-15 minute micro-lesson` on this point would look like
 
 The note should follow the chapter's knowledge structure, not only the textbook's printing structure.
 
 Default vNext authoring is page-first:
 
 1. build `knowledge-map.json`
-2. draft `knowledge-pages.json`
-3. let each important page stand as an independent micro-lesson
-4. compile `detailed-notes.md` from those pages
+2. plan page briefs for target knowledge points
+3. draft `knowledge-pages.json`
+4. let each important page stand as an independent micro-lesson
+5. compile `detailed-notes.md` from those pages
 
 Do not treat `knowledge-pages.json` as page data extracted from a finished long note unless you are explicitly migrating old content.
 
@@ -111,6 +119,7 @@ Important:
 - complexity is not permission to under-explain
 - `C1/C2` does not mean "just fill the minimum blocks"
 - if a page has high confusion risk, heavy dependency load, or transfer burden, increase the teaching profile even when the complexity label is not high
+- if a `lite` page still fails the learner-doubt test, upgrade the page instead of shrinking the explanation
 
 ### `C1`
 

@@ -65,6 +65,15 @@ For each chapter:
 8. create `knowledge-pages.json` as the primary page-level teaching source for key knowledge points
 9. compile `detailed-notes.md` from those pages instead of extracting pages from a completed long note
 
+Before writing page blocks, prepare a short internal page brief for each target knowledge point:
+
+- the learner doubt to resolve first
+- the best teaching entry point
+- the minimum example or counterexample
+- the why-it-holds segment that cannot be skipped
+- the likely confusion to eliminate
+- the closed-book output target
+
 Do not simply mirror textbook headings if doing so hurts learning clarity.
 
 For high-importance `C3/C4` points, think in terms of:
@@ -244,6 +253,7 @@ Interpretation rule:
 - teaching contract decides the obligation
 - a `C2` page with high confusion risk may still need `standard` or `deep` treatment
 - a page is incomplete if it only renames headings without answering its `must_answer` questions
+- `C1/C2` pages may use fewer blocks, but they still need a real example, a real learner-facing explanation, and at least one confusion boundary when confusion is likely
 
 ## Novice Learnability Contract
 
@@ -319,12 +329,27 @@ For an existing chapter pack, the recommended command is:
 
 It orchestrates:
 
-1. `build_knowledge_pages.py`
-2. `compile_detailed_notes_from_pages.py`
-3. `check_lesson_pack_vnext.py`
-4. `repair_knowledge_pages.py` when needed
-5. `compile_detailed_notes_from_pages.py` again when repair changed page content
-6. a final checker pass
+1. `compile_detailed_notes_from_pages.py`
+2. `check_lesson_pack_vnext.py`
+3. `repair_knowledge_pages.py` when needed
+4. `compile_detailed_notes_from_pages.py` again when repair changed page content
+5. a final checker pass
+
+This command is page-first by default. It reuses existing `knowledge-pages.json` and should not rebuild pages from `detailed-notes.md` on every refresh pass.
+
+Use:
+
+- `scripts/refresh_chapter_pack.py <chapter-dir> --rebuild-pages`
+
+only when you are migrating an older chapter pack or intentionally regenerating `knowledge-pages.json` from `detailed-notes.md`.
+
+For targeted page work, prefer:
+
+- `scripts/check_lesson_pack_vnext.py <chapter-dir> --page-id <knowledge-point-id>`
+- `scripts/repair_knowledge_pages.py <chapter-dir> --page-id <knowledge-point-id>`
+- `scripts/refresh_chapter_pack.py <chapter-dir> --page-id <knowledge-point-id>`
+
+This avoids whole-chapter rework when only a few knowledge pages need repair.
 
 ## Rough Note Anti-Patterns
 
