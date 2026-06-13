@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Build knowledge-pages.json from a vNext chapter pack."""
+"""Build knowledge-pages.json from a vNext chapter pack.
+
+Compatibility helper for legacy or transitional chapter packs that still
+start from detailed-notes.md. The preferred vNext flow is page-first:
+knowledge-map.json -> knowledge-pages.json -> detailed-notes.md.
+"""
 
 from __future__ import annotations
 

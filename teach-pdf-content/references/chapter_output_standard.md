@@ -62,7 +62,8 @@ For each chapter:
 5. assign complexity levels `C1-C4` to new concepts
 6. decide teaching depth from complexity rather than from textbook heading size
 7. create `knowledge-map.json` before finalizing learner-facing files
-8. for dense chapters, create `knowledge-pages.json` as page-level teaching data for key knowledge points
+8. create `knowledge-pages.json` as the primary page-level teaching source for key knowledge points
+9. compile `detailed-notes.md` from those pages instead of extracting pages from a completed long note
 
 Do not simply mirror textbook headings if doing so hurts learning clarity.
 
@@ -77,6 +78,8 @@ For high-importance `C3/C4` points, think in terms of:
 `detailed-notes.md` is the main teaching artifact.
 
 It must read like a chapter handout that can teach the learner directly, not like a compressed review sheet or a definition dump.
+
+In the page-first workflow, `detailed-notes.md` is a compiled chapter handout assembled from `knowledge-pages.json`. It is not the preferred source-of-truth for page generation.
 
 Every full `detailed-notes.md` must contain:
 

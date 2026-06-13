@@ -134,13 +134,17 @@ Use:
      - implementation anchors
      - exercise targets
    - Create or update `knowledge-map.json` before finalizing learner-facing files.
-   - For dense chapters, create or update `knowledge-pages.json` as page-level teaching data for key knowledge points.
+   - Create or update `knowledge-pages.json` as the primary page-level teaching source before finalizing learner-facing files.
+   - For high-importance `C3/C4` points, prepare page-level teaching data as standalone `10-15 minute micro-lessons`, not as afterthoughts extracted from a finished long note.
    - If the material is CS/data-structures/programming-heavy, load `references/subskills/cs-data-structures.md`.
 
 4. Draft the learner-facing chapter pack.
    - Load `references/subskills/lesson-note-builder.md` before drafting `detailed-notes.md`.
    - Load `references/subskills/practice-builder.md` before drafting `practice.md` and `review-notes.md`.
-   - For high-importance `C3/C4` knowledge points, think in terms of a `10-15 minute micro-lesson` before writing chapter prose.
+   - The default vNext flow is `knowledge-map.json -> knowledge-pages.json -> detailed-notes.md -> practice.md/review-notes.md`.
+   - Draft `knowledge-pages.json` first; compile `detailed-notes.md` from those pages instead of treating pages as data extracted from a finished note.
+   - Use `scripts/compile_detailed_notes_from_pages.py <chapter-dir> --overwrite --sync-anchors` when the chapter already has usable page-level teaching data.
+   - Use `scripts/build_knowledge_pages.py` only as a compatibility or migration helper for older chapter packs that still start from `detailed-notes.md`.
    - Keep long material in Markdown files rather than terminal output.
    - Organize learner-facing output by learning stage:
      - `detailed-notes.md`: teach and explain

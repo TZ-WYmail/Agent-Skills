@@ -142,6 +142,36 @@ def check_knowledge_pages(path: Path, issues: list[dict[str, object]]) -> None:
     blocks = first.get("blocks")
     if not isinstance(blocks, list) or not blocks:
         add_issue(issues, "warning", "missing_blocks", path.name, "page should contain at least one block")
+        return
+    block_types = {
+        str(block.get("type"))
+        for block in blocks
+        if isinstance(block, dict) and block.get("type")
+    }
+    if "hook" not in block_types:
+        add_issue(issues, "warning", "missing_page_hook", path.name, "first page should expose a hook block")
+    if "closed_book_retell" not in block_types:
+        add_issue(issues, "warning", "missing_page_retell", path.name, "first page should expose a closed-book retell block")
+    complexity = str(first.get("complexity_level") or "")
+    importance = str(first.get("importance_level") or "")
+    if complexity in {"C3", "C4"} or importance == "high":
+        for required in ("minimum_example", "why_it_holds"):
+            if required not in block_types:
+                add_issue(
+                    issues,
+                    "warning",
+                    "missing_page_teaching_block",
+                    path.name,
+                    f"high-value page should include `{required}`",
+                )
+    if complexity in {"C3", "C4"} and "trace" not in block_types:
+        add_issue(
+            issues,
+            "warning",
+            "missing_page_trace",
+            path.name,
+            "C3/C4 page should include a trace block",
+        )
 
 
 def check_meta(path: Path, issues: list[dict[str, object]]) -> None:

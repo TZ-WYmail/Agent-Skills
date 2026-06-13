@@ -41,7 +41,7 @@
 | Phase 2 | 为 vNext 增加 scaffold / checker 脚本入口 | 本轮完成 |
 | Phase 3 | 调整 subskills，让生成逻辑围绕知识点、复杂度、教学闭环组织 | 本轮完成 |
 | Phase 4 | 选样章做迁移示范，验证新模板可用 | 待做 |
-| Phase 5 | 引入知识点微讲页模型，生成页级教学数据 | 待做 |
+| Phase 5 | 引入知识点微讲页模型，生成页级教学数据，并把主流程切到 page-first | 本轮完成 |
 | Phase 6 | 改 renderer，对接 `knowledge-map.json`、页级教学数据与翻页式前端 | 待做 |
 | Phase 7 | 用样章复测、校准质量门、再推广到全课程 | 待做 |
 
@@ -207,6 +207,8 @@
 - 对重点知识点生成页级 block 数据
 - 支持按知识点类型切换讲解模式，而不是强套统一模板
 - 支持并行生成知识点页，再回收汇编为三主文件
+- `detailed-notes.md` 由 `knowledge-pages.json` 汇编得到，而不是再从长讲义中反向抽页
+- 保留 `build_knowledge_pages.py` 作为旧包迁移工具，而不是主流程
 
 验收标准：
 

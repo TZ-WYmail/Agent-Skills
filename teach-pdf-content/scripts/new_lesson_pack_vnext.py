@@ -71,6 +71,7 @@ ZH_TEMPLATES = {
 - 第一次学习：
 - 第二次整理：
 - 复习回看：
+- 主流程提醒：先补 `knowledge-pages.json`，再汇编本讲义。
 
 ## 起步例子 / 章节引子
 
@@ -557,7 +558,7 @@ def build_knowledge_pages(values: dict[str, str]) -> dict[str, object]:
                 "learning_goal": "",
                 "entry_question": "",
                 "page_summary": "",
-                "notes_anchor": "",
+                "notes_anchor": "detailed-notes#x-x-知识点标题",
                 "practice_refs": [],
                 "review_refs": [],
                 "source_refs": [],
@@ -565,6 +566,8 @@ def build_knowledge_pages(values: dict[str, str]) -> dict[str, object]:
                     {"type": "hook", "title": "入口问题", "content": [""]},
                     {"type": "minimum_example", "title": "最小例子", "content": [""]},
                     {"type": "why_it_holds", "title": "为什么成立", "content": [""]},
+                    {"type": "trace", "title": "过程追踪", "content": [""]},
+                    {"type": "confusion_fix", "title": "易错点 / 误区", "content": [""]},
                     {"type": "closed_book_retell", "title": "闭卷输出", "content": [""]},
                 ],
             }
