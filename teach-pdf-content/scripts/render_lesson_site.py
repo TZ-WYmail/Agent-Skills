@@ -24,6 +24,13 @@ SECTION_ORDER = [
     ("source-map.md", "来源", "来源映射"),
 ]
 
+VNEXT_SECTION_ORDER = [
+    ("detailed-notes.md", "讲义", "详细讲义"),
+    ("practice.md", "练习", "对应练习"),
+    ("review-notes.md", "复习", "复习笔记"),
+    ("source-map.md", "来源", "来源映射"),
+]
+
 TAB_GROUPS = [
     ("primer", "先学", ["00-learning-path.md", "01-lesson-notes.md"]),
     ("recall", "自测", ["02-active-recall.md"]),
@@ -31,6 +38,13 @@ TAB_GROUPS = [
     ("review", "复习", ["05-review-plan.md", "06-memory-cards.md"]),
     ("glossary", "术语", ["04-glossary.md"]),
     ("code", "代码", ["07-code-extracts.md"]),
+    ("source", "来源", ["source-map.md"]),
+]
+
+VNEXT_TAB_GROUPS = [
+    ("primer", "讲义", ["detailed-notes.md"]),
+    ("practice", "练习", ["practice.md"]),
+    ("review", "复习", ["review-notes.md"]),
     ("source", "来源", ["source-map.md"]),
 ]
 
@@ -42,6 +56,11 @@ STAGE_MODES = {
     "glossary": ("review",),
     "code": ("study",),
     "source": ("study", "review"),
+}
+
+FILE_LABELS = {
+    name: (short_label, long_label)
+    for name, short_label, long_label in SECTION_ORDER + VNEXT_SECTION_ORDER
 }
 
 INLINE_CODE_RE = re.compile(r"`([^`]+)`")
@@ -57,11 +76,21 @@ class Chapter:
     title: str
     chapter_range: str
     output_mode: str
+    output_format: str
     created_at: str
     path: Path
     files: list[Path]
+    knowledge_map_path: Path | None
     note_lines: int
     note_chars: int
+
+
+def section_order_for(output_format: str) -> list[tuple[str, str, str]]:
+    return VNEXT_SECTION_ORDER if output_format == "vnext" else SECTION_ORDER
+
+
+def tab_groups_for(output_format: str) -> list[tuple[str, str, list[str]]]:
+    return VNEXT_TAB_GROUPS if output_format == "vnext" else TAB_GROUPS
 
 
 def read_text(path: Path) -> str:
@@ -96,19 +125,34 @@ def discover_chapters(lessons_root: Path) -> list[Chapter]:
         title = str(meta.get("title") or slug_to_title(chapter_dir.name))
         chapter_range = str(meta.get("chapter") or "未标注范围")
         output_mode = str(meta.get("output_mode") or "beginner_lecture")
+        output_format = str(meta.get("output_format") or "")
+        if not output_format:
+            output_format = "vnext" if (chapter_dir / "detailed-notes.md").exists() else "legacy"
         created_at = str(meta.get("created_at") or "")
-        files = [chapter_dir / name for name, _, _ in SECTION_ORDER if (chapter_dir / name).exists()]
-        note_path = chapter_dir / "01-lesson-notes.md"
-        note_text = read_text(note_path) if note_path.exists() else ""
+        files = [
+            chapter_dir / name
+            for name, _, _ in section_order_for(output_format)
+            if (chapter_dir / name).exists()
+        ]
+        note_candidates = (
+            ["detailed-notes.md", "01-lesson-notes.md"]
+            if output_format == "vnext"
+            else ["01-lesson-notes.md", "detailed-notes.md"]
+        )
+        note_path = next((chapter_dir / name for name in note_candidates if (chapter_dir / name).exists()), None)
+        note_text = read_text(note_path) if note_path else ""
+        knowledge_map_path = chapter_dir / "knowledge-map.json"
         chapters.append(
             Chapter(
                 chapter_id=chapter_dir.name,
                 title=title,
                 chapter_range=chapter_range,
                 output_mode=output_mode,
+                output_format=output_format,
                 created_at=created_at,
                 path=chapter_dir,
                 files=files,
+                knowledge_map_path=knowledge_map_path if knowledge_map_path.exists() else None,
                 note_lines=note_text.count("\n") + (1 if note_text else 0),
                 note_chars=len(note_text),
             )
@@ -263,10 +307,161 @@ def markdown_to_html(text: str) -> str:
 
 
 def file_label(name: str) -> tuple[str, str]:
-    for filename, short_label, long_label in SECTION_ORDER:
-        if filename == name:
-            return short_label, long_label
-    return name, name
+    return FILE_LABELS.get(name, (name, name))
+
+
+def anchor_href(anchor: str | None, fallback: str) -> str:
+    if not anchor:
+        return fallback
+    fragment = anchor.split("#", 1)[1] if "#" in anchor else anchor
+    fragment = fragment.strip()
+    if not fragment:
+        return fallback
+    return f"#{escape(fragment)}"
+
+
+def ordered_knowledge_nodes(data: dict, node_lookup: dict[str, dict]) -> list[dict]:
+    ordered_ids: list[str] = []
+    for path_name in ("study", "review"):
+        for node_id in data.get("recommended_paths", {}).get(path_name, []):
+            node_key = str(node_id)
+            if node_key in node_lookup and node_key not in ordered_ids:
+                ordered_ids.append(node_key)
+
+    def importance_rank(node: dict) -> tuple[int, str]:
+        order = {"high": 0, "medium": 1, "low": 2}
+        importance = str(node.get("importance_level") or "medium").lower()
+        return order.get(importance, 3), str(node.get("id") or "")
+
+    remaining = sorted(
+        (node for node_id, node in node_lookup.items() if node_id not in ordered_ids),
+        key=importance_rank,
+    )
+    return [node_lookup[node_id] for node_id in ordered_ids] + remaining
+
+
+def render_knowledge_map(chapter: Chapter) -> str:
+    if not chapter.knowledge_map_path:
+        return ""
+
+    try:
+        data = load_json(chapter.knowledge_map_path)
+    except json.JSONDecodeError:
+        return ""
+
+    nodes = [node for node in data.get("nodes", []) if isinstance(node, dict)]
+    if not nodes:
+        return ""
+
+    node_lookup = {str(node.get("id")): node for node in nodes if node.get("id")}
+    chapter_problem = str(data.get("chapter_problem") or "").strip()
+    study_ids = [str(node_id) for node_id in data.get("recommended_paths", {}).get("study", [])]
+    review_ids = [str(node_id) for node_id in data.get("recommended_paths", {}).get("review", [])]
+
+    def render_path_panel(path_title: str, node_ids: list[str], anchor_key: str, fallback: str) -> str:
+        pills: list[str] = []
+        for index, node_id in enumerate(node_ids, start=1):
+            node = node_lookup.get(node_id)
+            if not node:
+                continue
+            pills.append(
+                f"""
+                <a class="path-pill" href="{anchor_href(str(node.get(anchor_key) or ""), fallback)}">
+                  <span>{index:02d}</span>
+                  <strong>{escape(str(node.get("title") or node_id))}</strong>
+                </a>
+                """
+            )
+        if not pills:
+            return ""
+        return f"""
+        <section class="path-panel">
+          <span class="eyebrow">{path_title}</span>
+          <div class="path-pill-row">
+            {''.join(pills)}
+          </div>
+        </section>
+        """
+
+    study_panel = render_path_panel("学习路径", study_ids, "notes_anchor", "#detailed-notes")
+    review_panel = render_path_panel("复习路径", review_ids, "review_anchor", "#review-notes")
+
+    clusters = [cluster for cluster in data.get("clusters", []) if isinstance(cluster, dict)]
+    cluster_cards: list[str] = []
+    for cluster in clusters:
+        cluster_nodes = [
+            escape(str(node_lookup[node_id].get("title") or node_id))
+            for node_id in [str(node_id) for node_id in cluster.get("node_ids", [])]
+            if node_id in node_lookup
+        ]
+        cluster_cards.append(
+            f"""
+            <article class="mini-card">
+              <span class="eyebrow">知识簇</span>
+              <h3>{escape(str(cluster.get("title") or ""))}</h3>
+              <p>{inline_markdown(str(cluster.get("summary") or ""))}</p>
+              <p class="mini-meta">{escape(' / '.join(cluster_nodes[:5]))}</p>
+            </article>
+            """
+        )
+
+    node_cards: list[str] = []
+    for node in ordered_knowledge_nodes(data, node_lookup):
+        title = str(node.get("title") or node.get("id") or "")
+        summary = str(node.get("summary") or "").strip() or title
+        complexity = str(node.get("complexity_level") or "")
+        importance = str(node.get("importance_level") or "")
+        badges = [
+            f'<span class="meta-badge">{escape(complexity)}</span>' if complexity else "",
+            f'<span class="meta-badge">{escape(importance)}</span>' if importance else "",
+        ]
+        note_link = anchor_href(str(node.get("notes_anchor") or ""), "#detailed-notes")
+        practice_link = anchor_href(str(node.get("practice_anchor") or ""), "#practice")
+        review_link = anchor_href(str(node.get("review_anchor") or ""), "#review-notes")
+        node_cards.append(
+            f"""
+            <article class="knowledge-node-card">
+              <div class="doc-card-head">
+                <div>
+                  <span class="eyebrow">知识点</span>
+                  <h3>{escape(title)}</h3>
+                </div>
+                <span class="file-chip">{escape(str(node.get("id") or ""))}</span>
+              </div>
+              <p>{inline_markdown(summary)}</p>
+              <div class="meta-badge-row">
+                {''.join(badge for badge in badges if badge)}
+              </div>
+              <div class="knowledge-link-row">
+                <a class="outline-link" href="{note_link}">讲义</a>
+                <a class="outline-link" href="{practice_link}">练习</a>
+                <a class="outline-link" href="{review_link}">复习</a>
+              </div>
+            </article>
+            """
+        )
+
+    cluster_block = f'<div class="mini-card-grid">{"".join(cluster_cards)}</div>' if cluster_cards else ""
+    problem_block = f'<p class="knowledge-map-problem">{inline_markdown(chapter_problem)}</p>' if chapter_problem else ""
+    return f"""
+    <section class="knowledge-map-board" id="knowledge-map">
+      <div class="section-topline">
+        <span class="eyebrow">知识图谱</span>
+        <h2>先看本章地图，再读细节</h2>
+      </div>
+      {problem_block}
+      <div class="knowledge-map-shell">
+        <div class="path-stack">
+          {study_panel}
+          {review_panel}
+        </div>
+        <div class="knowledge-node-grid">
+          {''.join(node_cards)}
+        </div>
+      </div>
+      {cluster_block}
+    </section>
+    """
 
 
 def split_markdown_sections(text: str) -> list[tuple[int, str, str]]:
@@ -851,13 +1046,19 @@ def render_file_section(path: Path) -> str:
         return render_learning_path(path)
     if path.name == "01-lesson-notes.md":
         return render_lesson_notes(path)
+    if path.name == "detailed-notes.md":
+        return render_lesson_notes(path)
     if path.name == "02-active-recall.md":
         return render_collapsible_doc(path, ("答案区", "Answer Key"))
     if path.name == "03-exercises.md":
         return render_collapsible_doc(path, ("完整答案", "Complete Answers and Scoring"))
+    if path.name == "practice.md":
+        return render_collapsible_doc(path, ("完整答案", "Complete Answers and Scoring"))
     if path.name == "04-glossary.md":
         return render_glossary(path)
     if path.name == "05-review-plan.md":
+        return render_review_plan(path)
+    if path.name == "review-notes.md":
         return render_review_plan(path)
     if path.name == "06-memory-cards.md":
         return render_memory_cards(path)
@@ -888,7 +1089,7 @@ def build_stage_panels(chapter: Chapter) -> str:
     available = file_exists_map(chapter)
     panels: list[str] = []
     visible_index = 0
-    for stage_id, _, filenames in TAB_GROUPS:
+    for stage_id, _, filenames in tab_groups_for(chapter.output_format):
         content = [render_file_section(available[name]) for name in filenames if name in available]
         if not content:
             continue
@@ -909,7 +1110,7 @@ def build_stage_buttons(chapter: Chapter) -> str:
     available = file_exists_map(chapter)
     buttons: list[str] = []
     visible_index = 0
-    for stage_id, stage_label, filenames in TAB_GROUPS:
+    for stage_id, stage_label, filenames in tab_groups_for(chapter.output_format):
         present = [name for name in filenames if name in available]
         if not present:
             continue
@@ -930,6 +1131,8 @@ def build_stage_buttons(chapter: Chapter) -> str:
 
 def build_quick_nav(chapter: Chapter) -> str:
     items = []
+    if chapter.knowledge_map_path:
+        items.append('<a href="#knowledge-map"><span>地图</span><strong>知识图谱</strong></a>')
     for path in chapter.files:
         short_label, long_label = file_label(path.name)
         items.append(
@@ -950,7 +1153,7 @@ def build_stage_summary(chapter: Chapter) -> str:
         "code": "把结构、算法和实现风险连到代码片段。",
         "source": "回到来源页与抽取可靠性，控制误读。",
     }
-    for stage_id, stage_label, filenames in TAB_GROUPS:
+    for stage_id, stage_label, filenames in tab_groups_for(chapter.output_format):
         present = [name for name in filenames if name in available]
         if not present:
             continue
@@ -1028,6 +1231,8 @@ def render_chapter_page(course_title: str, chapter: Chapter, out_dir: Path) -> N
           <div><span>生成时间</span><strong>{escape(chapter.created_at or "未知")}</strong></div>
         </div>
       </header>
+
+      {render_knowledge_map(chapter)}
 
       <section class="reading-notes">
         <div class="reading-card">
@@ -1353,6 +1558,100 @@ code, pre {
 .section-topline h2,
 .section-topline h3 {
   margin: 0.25rem 0 0.6rem;
+}
+.knowledge-map-board {
+  margin: 1rem 0 1.35rem;
+  padding: 1.1rem;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.94), rgba(247,239,226,0.92));
+  border: 1px solid rgba(120, 94, 61, 0.12);
+}
+.knowledge-map-problem {
+  margin: 0 0 1rem;
+  color: #4b5564;
+  line-height: 1.68;
+}
+.knowledge-map-shell {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.6fr);
+  gap: 1rem;
+  align-items: start;
+}
+.path-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+.path-panel {
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(95, 82, 63, 0.09);
+}
+.path-pill-row {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+}
+.path-pill {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.72rem 0.8rem;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(95, 82, 63, 0.08);
+}
+.path-pill span {
+  display: inline-flex;
+  min-width: 2rem;
+  justify-content: center;
+  padding: 0.18rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(138, 90, 43, 0.12);
+  color: #7d542c;
+  font: 700 0.74rem/1.2 "IBM Plex Sans", "Segoe UI Variable Text", sans-serif;
+}
+.path-pill strong {
+  line-height: 1.4;
+}
+.knowledge-node-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.85rem;
+}
+.knowledge-node-card {
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.76);
+  border: 1px solid rgba(95, 82, 63, 0.09);
+}
+.knowledge-node-card h3 {
+  margin: 0.25rem 0 0.35rem;
+  font-size: 1.02rem;
+}
+.knowledge-node-card p {
+  margin: 0.4rem 0 0;
+  color: #4f5967;
+  line-height: 1.62;
+}
+.meta-badge-row,
+.knowledge-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+.meta-badge {
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(138, 90, 43, 0.11);
+  color: #7d542c;
+  font: 700 0.75rem/1.2 "IBM Plex Sans", "Segoe UI Variable Text", sans-serif;
+}
+.knowledge-link-row .outline-link {
+  padding: 0.45rem 0.68rem;
+  font-size: 0.88rem;
 }
 .mini-card-grid,
 .dashboard-grid,
@@ -1754,7 +2053,8 @@ code, pre {
   }
   .hero,
   .reading-notes,
-  .mode-switcher {
+  .mode-switcher,
+  .knowledge-map-shell {
     grid-template-columns: 1fr;
   }
 }
